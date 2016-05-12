@@ -37,4 +37,8 @@ class SQLiteRequestHelper {
         return "CREATE TABLE IF NOT EXISTS " + entityType.getSimpleName() + "(" + sb.toString() + ");";
     }
 
+    public static String deleteTable(String name) {
+        return "DROP TABLE IF EXISTS " + name + ";";
+    }
+
 }

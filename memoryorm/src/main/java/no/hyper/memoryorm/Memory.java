@@ -14,10 +14,6 @@ public class Memory {
     private static final String LOG_TAG = Memory.class.getSimpleName();
     DbManager db;
 
-    public Memory(Context context) {
-        db = new DbManager(context, context.getPackageName(), null, 1);
-    }
-
     public <T> void saveList(List<T> list) {
         db.saveList(list);
     }
@@ -47,10 +43,6 @@ public class Memory {
         return db.fetchById(entityToFetch, id);
     }
 
-    public <T> void deleteTable(Class<T> entityToDelete) {
-        db.deleteTable(entityToDelete.getSimpleName());
-    }
-
     public <T> void updateOrInsert(T entity) {
         db.updateOrInsertEntity(entity);
     }
@@ -66,8 +58,25 @@ public class Memory {
     // -------------------------------------------------------------------------------------
     // REFACTORING ->
 
-    public <T> void createTableFrom(Class<T> entity) {
-        db.createTableFrom(entity);
+    public static final int SUCCESS = 1;
+    public static final int FAIL = -1;
+
+    public static final int TABLE_ALREADY_EXIST = 10;
+
+
+    public Memory(Context context) {
+        db = new DbManager(context, context.getPackageName(), null, 1);
     }
 
+    public <T> int createTableFrom(Class<T> classType) {
+        return db.createTableFrom(classType, false);
+    }
+
+    public <T> int createTableFrom(Class<T> classType, boolean autoincrement) {
+        return db.createTableFrom(classType, autoincrement);
+    }
+
+    public <T> int deleteTable(Class<T> classType) {
+        return db.deleteTable(classType);
+    }
 }

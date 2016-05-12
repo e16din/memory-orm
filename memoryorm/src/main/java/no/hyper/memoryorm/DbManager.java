@@ -76,15 +76,6 @@ public class DbManager extends SQLiteOpenHelper {
         }
     }
 
-    private void execute(String request) {
-        try {
-            this.getWritableDatabase().execSQL(request);
-        } catch(SQLException e) {
-            e.printStackTrace();
-            Log.d(LOG_TAG, "succeed: " + e.getMessage());
-        }
-    }
-
     private Long insert(String table, ContentValues values) {
         return this.getWritableDatabase().insert(table, null, values);
     }
@@ -343,14 +334,6 @@ public class DbManager extends SQLiteOpenHelper {
         return insert(entity);
     }
 
-    public void deleteTable(String name) {
-        try {
-            execute("DROP TABLE IF EXISTS " + name + ";");
-        } catch (SQLiteException e) {
-            Log.e(LOG_TAG, e.getMessage());
-        }
-    }
-
     public <T> void updateOrInsertList(List<T> list) {
         try {
             if (list.size() > 0) {
@@ -396,14 +379,25 @@ public class DbManager extends SQLiteOpenHelper {
         return (cursor.getCount() > 0);
     }
 
+    private int execute(String request) {
+        try {
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.execSQL(request);
+            db.close();
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
 
+    public <T> int createTableFrom(Class<T> classType, boolean autoincrement) {
+        if (testIfTableExist(classType.getSimpleName())) return Memory.TABLE_ALREADY_EXIST;
+        return execute(SQLiteRequestHelper.createTable(classType, autoincrement));
+    }
 
-    public <T> int createTableFrom(Class<T> entity) {
-        if (testIfTableExist(entity.getClass().getSimpleName())) return -1;
-
-        String request = SQLiteRequestHelper.createTable(entity, false);
-        Log.d(LOG_TAG, "");
-        return 0;
+    public <T> int deleteTable(Class<T> classType) {
+        return execute(SQLiteRequestHelper.deleteTable(classType.getSimpleName()));
     }
 
 }
