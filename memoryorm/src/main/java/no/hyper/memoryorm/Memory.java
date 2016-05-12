@@ -2,6 +2,8 @@ package no.hyper.memoryorm;
 
 import android.content.Context;
 
+import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -59,6 +61,13 @@ public class Memory {
 
     public <T> void updateOrInsertListWithNestedObject(List<T> list, HashMap<String, Type> nestedType) {
         db.updateOrInsertListWithNestedObject(list, nestedType);
+    }
+
+    // -------------------------------------------------------------------------------------
+    // REFACTORING ->
+
+    public <T> void createTableFrom(Class<T> entity) {
+        db.createTableFrom(entity);
     }
 
 }

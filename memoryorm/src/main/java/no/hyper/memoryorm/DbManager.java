@@ -126,15 +126,6 @@ public class DbManager extends SQLiteOpenHelper {
         return rawQuery(request, null);
     }
 
-    private boolean testIfTableExist(String table) {
-        Cursor cursor = rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "';", null);
-        if (cursor.getCount() > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     private <T> void createTableIfNecessary(Class<T> entity) {
         if (testIfTableExist(entity.getSimpleName())) return;
 
@@ -395,6 +386,24 @@ public class DbManager extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // REFACTORING ->
+
+    private boolean testIfTableExist(String tableName) {
+        Cursor cursor = rawQuery(SQLiteRequestHelper.testTableExistence(tableName), null);
+        return (cursor.getCount() > 0);
+    }
+
+
+
+    public <T> int createTableFrom(Class<T> entity) {
+        if (testIfTableExist(entity.getClass().getSimpleName())) return -1;
+
+        String request = SQLiteRequestHelper.createTable(entity, false);
+        Log.d(LOG_TAG, "");
+        return 0;
     }
 
 }
