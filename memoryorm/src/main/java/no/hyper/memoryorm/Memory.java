@@ -18,16 +18,8 @@ public class Memory {
         db.saveList(list);
     }
 
-    public <T> Long save(T entityToSave) {
-        return db.save(entityToSave);
-    }
-
     public <T> List<T>  fetchAllWithNesteedObject(Class<T> entityToFetch, List<String> nestedAttributes) {
         return db.fetchAllWithNestedObject(entityToFetch, nestedAttributes);
-    }
-
-    public <T> List<T>  fetchAll(Class<T> entityToFetch) {
-        return db.fetchAll(entityToFetch);
     }
 
     public <T> T fetchFirst(Class<T> entityToFetch) {
@@ -58,8 +50,9 @@ public class Memory {
     // -------------------------------------------------------------------------------------
     // REFACTORING ->
 
-    public static final int SUCCESS = 1;
-    public static final int FAIL = -1;
+    public static final int SUCCESS_EXECUTE = 1;
+    public static final long SUCCESS_INSERT = 1;
+    public static final int FAIL_EXECUTE = -1;
 
     public static final int TABLE_ALREADY_EXIST = 10;
 
@@ -78,5 +71,18 @@ public class Memory {
 
     public <T> int deleteTable(Class<T> classType) {
         return db.deleteTable(classType);
+    }
+
+    public <T> Long save(T entity) {
+        int result = createTableFrom(entity.getClass());
+        if (result != FAIL_EXECUTE) {
+            return db.save(entity);
+        } else {
+            return (long)result;
+        }
+    }
+
+    public <T> List<T>  fetchAll(Class<T> classType) {
+        return db.fetchAll(classType);
     }
 }

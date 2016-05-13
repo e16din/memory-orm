@@ -41,4 +41,7 @@ class SQLiteRequestHelper {
         return "DROP TABLE IF EXISTS " + name + ";";
     }
 
+    public static String fetchAll(String name) {
+        return "SELECT * FROM " + name + ";";
+    }
 }

@@ -13,7 +13,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,24 +86,6 @@ public class DbManager extends SQLiteOpenHelper {
         return this.getWritableDatabase().rawQuery(request, args);
     }
 
-    private <T> HashMap<String, Object> cursorToHashMap(Class<T> entity, Cursor cursor) {
-        Field[] fields = entity.getDeclaredFields();
-        HashMap<String, Object> map = new HashMap<>();
-        for (int i = 0; i < fields.length; i++) {
-            String fieldName = getFieldName(fields[i]);
-            int index = cursor.getColumnIndex(fieldName);
-            if (index >= 0) {
-                switch (fields[i].getType().getSimpleName()) {
-                    case "int":
-                    case "Integer": map.put(fieldName, String.valueOf(cursor.getInt(index))); break;
-                    case "boolean": map.put(fieldName, String.valueOf(cursor.getInt(index) == 1)); break;
-                    default: map.put(fieldName, cursor.getString(index)); break;
-                }
-            }
-        }
-        return map;
-    }
-
     private String getFieldName(Field field) {
         SerializedName annotation = field.getAnnotation(SerializedName.class);
         if (annotation != null) {
@@ -123,37 +107,6 @@ public class DbManager extends SQLiteOpenHelper {
         String content = createContent(entity.getDeclaredFields());
         String table = createTable(entity.getSimpleName(), content);
         execute(table);
-    }
-
-    private <T> long insert(T entity) {
-        try {
-            ContentValues values = new ContentValues();
-            for(Field field : entity.getClass().getDeclaredFields()) {
-                if(!field.getName().startsWith("$")) {
-                    field.setAccessible(true);
-                    Object value = null;
-                    try {
-                        value = field.get(entity);
-                        if (value != null) {
-                            if (value.toString().equals("true")) {
-                                value = 1;
-                            } else if (value.toString().equals("false")) {
-                                value = 0;
-                            }
-                        } else {
-                            value = "";
-                        }
-                        values.put(getFieldName(field), value.toString());
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return insert(entity.getClass().getSimpleName(), values);
-        } catch (SQLiteException e) {
-            Log.e(LOG_TAG, e.getMessage());
-            return -1;
-        }
     }
 
     private <T> long insertWithNestedObject(T entity, HashMap<String, Type> nestedType) {
@@ -277,29 +230,6 @@ public class DbManager extends SQLiteOpenHelper {
         }
     }
 
-    public <T> List<T> fetchAll(Class<T> entityType) {
-        try {
-            String query = "SELECT * FROM " + entityType.getSimpleName() + ";";
-            Cursor cursor = rawQuery(query, null);
-            if (cursor.getCount() <= 0) return null;
-
-            cursor.moveToFirst();
-            boolean next;
-            List<T> entities = new ArrayList<>();
-
-            do {
-                HashMap<String, Object> map = cursorToHashMap(entityType, cursor);
-                String json = gson.toJson(map).replace("_", "-");
-                entities.add(gson.fromJson(json, entityType));
-                next = cursor.moveToNext();
-            } while (next);
-            return entities;
-        } catch (SQLiteException e) {
-            Log.e(LOG_TAG, e.getMessage());
-            return null;
-        }
-    }
-
     public <T> T fetchById(Class<T> entityType, String id) {
         try {
             Cursor cursor = getEntityById(entityType.getSimpleName(), id);
@@ -327,11 +257,6 @@ public class DbManager extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
-    }
-
-    public <T> long save(T entity) {
-        createTableIfNecessary(entity.getClass());
-        return insert(entity);
     }
 
     public <T> void updateOrInsertList(List<T> list) {
@@ -374,11 +299,6 @@ public class DbManager extends SQLiteOpenHelper {
     // -------------------------------------------------------------------------------------
     // REFACTORING ->
 
-    private boolean testIfTableExist(String tableName) {
-        Cursor cursor = rawQuery(SQLiteRequestHelper.testTableExistence(tableName), null);
-        return (cursor.getCount() > 0);
-    }
-
     private int execute(String request) {
         try {
             SQLiteDatabase db = this.getWritableDatabase();
@@ -391,6 +311,85 @@ public class DbManager extends SQLiteOpenHelper {
         }
     }
 
+    private <T> long insert(T entity) {
+        ContentValues values = new ContentValues();
+        for(Field field : entity.getClass().getDeclaredFields()) {
+            if(field.getName().startsWith("$")) continue;
+            field.setAccessible(true);
+            Object value;
+            try {
+                value = field.get(entity);
+                if (value == null) continue;
+
+                values.put(field.getName(), convertJavaValueToSQLite(value).toString());
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return insert(entity.getClass().getSimpleName(), values);
+    }
+
+    private Object convertJavaValueToSQLite(Object value) {
+        if (value.toString().equals("true")) {
+            return 1;
+        } else if (value.toString().equals("false")) {
+            return 0;
+        } else {
+            return value;
+        }
+    }
+
+    private boolean testIfTableExist(String tableName) {
+        Cursor cursor = rawQuery(SQLiteRequestHelper.testTableExistence(tableName), null);
+        return (cursor.getCount() > 0);
+    }
+
+    private Object[] getDefaultParametersForConstructor(Class<?>[] types) {
+        Object[] parameters = new Object[types.length];
+        for (int i = 0; i < types.length; i++) {
+            switch (types[i].getSimpleName()) {
+                case "int": parameters[i] = 0; break;
+                case "boolean": parameters[i] = false; break;
+                case "String": parameters[i] = ""; break;
+            }
+        }
+        return parameters;
+    }
+
+    private <T> T bindHashMapToEntity(HashMap<String, Object> map, T entity) {
+        for(Map.Entry<String, Object> entry : map.entrySet()) {
+            for(Field field : entity.getClass().getDeclaredFields()) {
+                if (field.getName().equals(entry.getKey())) {
+                    try {
+                        field.setAccessible(true);
+                        field.set(entity, entry.getValue());
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return entity;
+    }
+
+    private <T> HashMap<String, Object> cursorToHashMap(Class<T> classType, Cursor cursor) {
+        HashMap<String, Object> map = new HashMap<>();
+        for (Field field : classType.getDeclaredFields()) {
+            String fieldName = field.getName();
+            int index = cursor.getColumnIndex(fieldName);
+            if (index >= 0) {
+                switch (field.getType().getSimpleName()) {
+                    case "int":
+                    case "Integer": map.put(fieldName, cursor.getInt(index)); break;
+                    case "boolean": map.put(fieldName, cursor.getInt(index) == 1); break;
+                    default: map.put(fieldName, cursor.getString(index)); break;
+                }
+            }
+        }
+        return map;
+    }
+
     public <T> int createTableFrom(Class<T> classType, boolean autoincrement) {
         if (testIfTableExist(classType.getSimpleName())) return Memory.TABLE_ALREADY_EXIST;
         return execute(SQLiteRequestHelper.createTable(classType, autoincrement));
@@ -400,5 +399,38 @@ public class DbManager extends SQLiteOpenHelper {
         return execute(SQLiteRequestHelper.deleteTable(classType.getSimpleName()));
     }
 
+    public <T> long save(T entity) {
+        createTableIfNecessary(entity.getClass());
+        return insert(entity);
+    }
+
+    public <T> List<T> fetchAll(Class<T> classType) {
+        Cursor cursor = rawQuery(SQLiteRequestHelper.fetchAll(classType.getSimpleName()), null);
+        if (cursor.getCount() <= 0) return null;
+
+        cursor.moveToFirst();
+        boolean next;
+        List<T> entities = new ArrayList<>();
+
+        do {
+            HashMap<String, Object> map = cursorToHashMap(classType, cursor);
+            //String json = gson.toJson(map).replace("_", "-");
+            //entities.add(gson.fromJson(json, classType));
+            try {
+                Constructor constructor = classType.getDeclaredConstructors()[0];
+                Object[] parameters = getDefaultParametersForConstructor(constructor.getParameterTypes());
+                T entity = (T)classType.getDeclaredConstructors()[0].newInstance(parameters);
+                entities.add(bindHashMapToEntity(map, entity));
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            next = cursor.moveToNext();
+        } while (next);
+        return entities;
+    }
 }
 
