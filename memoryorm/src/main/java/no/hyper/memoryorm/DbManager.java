@@ -27,13 +27,6 @@ import java.util.Map;
  */
 public class DbManager extends SQLiteOpenHelper {
 
-    private final static String LOG_TAG = DbManager.class.getSimpleName();
-    private Gson gson = new Gson();
-
-    public DbManager(Context context, String dbName, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, dbName, factory, version);
-    }
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(LOG_TAG, "$LOG_TAG onCreate");
@@ -52,7 +45,7 @@ public class DbManager extends SQLiteOpenHelper {
 
 
 
-    private String createTable(String name, String content) {
+    /*private String createTable(String name, String content) {
         return "CREATE TABLE IF NOT EXISTS " + name + "(" + content + ");";
     }
 
@@ -78,14 +71,6 @@ public class DbManager extends SQLiteOpenHelper {
         }
     }
 
-    private Long insert(String table, ContentValues values) {
-        return this.getWritableDatabase().insert(table, null, values);
-    }
-
-    private Cursor rawQuery(String request, String[] args) {
-        return this.getWritableDatabase().rawQuery(request, args);
-    }
-
     private String getFieldName(Field field) {
         SerializedName annotation = field.getAnnotation(SerializedName.class);
         if (annotation != null) {
@@ -99,14 +84,6 @@ public class DbManager extends SQLiteOpenHelper {
     private Cursor getEntityById(String table, String id) {
         String request = "SELECT * FROM " + table + " WHERE ID='" + id + "';";
         return rawQuery(request, null);
-    }
-
-    private <T> void createTableIfNecessary(Class<T> entity) {
-        if (testIfTableExist(entity.getSimpleName())) return;
-
-        String content = createContent(entity.getDeclaredFields());
-        String table = createTable(entity.getSimpleName(), content);
-        execute(table);
     }
 
     private <T> long insertWithNestedObject(T entity, HashMap<String, Type> nestedType) {
@@ -249,7 +226,7 @@ public class DbManager extends SQLiteOpenHelper {
 
     public <T> void saveList(List<T> list) {
         try {
-            createTableIfNecessary(list.get(0).getClass());
+            createTableFrom(list.get(0).getClass(), false);
             ContentValues values = new ContentValues();
             for(T entity : list) {
                 insert(entity);
@@ -262,7 +239,7 @@ public class DbManager extends SQLiteOpenHelper {
     public <T> void updateOrInsertList(List<T> list) {
         try {
             if (list.size() > 0) {
-                createTableIfNecessary(list.get(0).getClass());
+                createTableFrom(list.get(0).getClass(), false);
                 for(T entity : list) {
                     updateOrInsert(entity);
                 }
@@ -274,7 +251,7 @@ public class DbManager extends SQLiteOpenHelper {
 
     public <T> void updateOrInsertListWithNestedObject(List<T> list, HashMap<String, Type> nestedType) {
         try {
-            createTableIfNecessary(list.get(0).getClass());
+            createTableFrom(list.get(0).getClass(), false);
             for(T entity : list) {
                 try {
                     updateOrInsertWithNestedObject(entity, nestedType);
@@ -289,21 +266,23 @@ public class DbManager extends SQLiteOpenHelper {
 
     public <T> void updateOrInsertEntity(T entity) {
         try {
-            createTableIfNecessary(entity.getClass());
+            createTableFrom(entity.getClass(), false);
             updateOrInsert(entity);
         } catch (SQLiteException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
-    }
+    }*/
 
-    // -------------------------------------------------------------------------------------
-    // REFACTORING ->
+    private final static String LOG_TAG = DbManager.class.getSimpleName();
+    private SQLiteDatabase db;
+
+    public DbManager(Context context, String dbName, SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, dbName, factory, version);
+    }
 
     private int execute(String request) {
         try {
-            SQLiteDatabase db = this.getWritableDatabase();
             db.execSQL(request);
-            db.close();
             return 1;
         } catch (Exception e) {
             e.printStackTrace();
@@ -320,14 +299,12 @@ public class DbManager extends SQLiteOpenHelper {
             try {
                 value = field.get(entity);
                 if (value == null) continue;
-
                 values.put(field.getName(), convertJavaValueToSQLite(value).toString());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
-
         }
-        return insert(entity.getClass().getSimpleName(), values);
+        return db.insert(entity.getClass().getSimpleName(), null, values);
     }
 
     private Object convertJavaValueToSQLite(Object value) {
@@ -341,8 +318,10 @@ public class DbManager extends SQLiteOpenHelper {
     }
 
     private boolean testIfTableExist(String tableName) {
-        Cursor cursor = rawQuery(SQLiteRequestHelper.testTableExistence(tableName), null);
-        return (cursor.getCount() > 0);
+        Cursor cursor = db.rawQuery(SQLiteRequestHelper.testTableExistence(tableName), null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
     }
 
     private Object[] getDefaultParametersForConstructor(Class<?>[] types) {
@@ -390,8 +369,18 @@ public class DbManager extends SQLiteOpenHelper {
         return map;
     }
 
+    public void open() {
+        if (db == null || !db.isOpen()) {
+            db = this.getWritableDatabase();
+        }
+    }
+
+    public void close() {
+        db.close();
+    }
+
     public <T> int createTableFrom(Class<T> classType, boolean autoincrement) {
-        if (testIfTableExist(classType.getSimpleName())) return Memory.TABLE_ALREADY_EXIST;
+        if (testIfTableExist(classType.getSimpleName())) return -1;
         return execute(SQLiteRequestHelper.createTable(classType, autoincrement));
     }
 
@@ -400,12 +389,22 @@ public class DbManager extends SQLiteOpenHelper {
     }
 
     public <T> long save(T entity) {
-        createTableIfNecessary(entity.getClass());
+        createTableFrom(entity.getClass(), false);
         return insert(entity);
     }
 
+    public <T> List<Long> saveList(List<T> list) {
+        if (list.size() <= 0) return null;
+        createTableFrom(list.get(0).getClass(), false);
+        List<Long> rows = new ArrayList<>();
+        for(T entity : list) {
+            rows.add(insert(entity));
+        }
+        return rows;
+    }
+
     public <T> List<T> fetchAll(Class<T> classType) {
-        Cursor cursor = rawQuery(SQLiteRequestHelper.fetchAll(classType.getSimpleName()), null);
+        Cursor cursor = db.rawQuery(SQLiteRequestHelper.fetchAll(classType.getSimpleName()), null);
         if (cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
@@ -414,8 +413,6 @@ public class DbManager extends SQLiteOpenHelper {
 
         do {
             HashMap<String, Object> map = cursorToHashMap(classType, cursor);
-            //String json = gson.toJson(map).replace("_", "-");
-            //entities.add(gson.fromJson(json, classType));
             try {
                 Constructor constructor = classType.getDeclaredConstructors()[0];
                 Object[] parameters = getDefaultParametersForConstructor(constructor.getParameterTypes());
@@ -430,6 +427,7 @@ public class DbManager extends SQLiteOpenHelper {
             }
             next = cursor.moveToNext();
         } while (next);
+        cursor.close();
         return entities;
     }
 }

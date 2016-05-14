@@ -18,22 +18,24 @@ class MainActivity : AppCompatActivity() {
         var result = memory.deleteTable(Profile::class.java)
         logResult("delete table Profile", result)
 
-        result = memory.createTableFrom(Profile::class.java)
+        result = memory.createTableFrom(Profile::class.java, true)
         logResult("create table Profile", result)
 
-        val p1 = Profile(null, "Jean", 23, true, "jean@hyper.no", "NO", "Maridalsveien 87", "Oslo", "0461")
-        val insert = memory.save(p1)
-        logResult("insert p1", insert)
+        val profiles = listOf(Profile("Finn", 13, true), Profile("Jake", 28, false))
+        val insert = memory.save(profiles)
+        Log.d(LOG_TAG, "insert: $insert")
 
-        memory.fetchAll(Profile::class.java)
+        val list = memory.fetchAll(Profile::class.java)
+        Log.d(LOG_TAG, list.toString())
+
+        val profile = memory.fetchFirst(Profile::class.java)
+        Log.d(LOG_TAG, profile.toString())
     }
 
     private fun logResult(action: String, result: Number) {
         when (result) {
-            Memory.SUCCESS_EXECUTE -> Log.d(LOG_TAG, "$action: success")
-            Memory.SUCCESS_INSERT -> Log.d(LOG_TAG, "$action: success")
-            Memory.FAIL_EXECUTE -> Log.d(LOG_TAG, "$action: fail")
-            Memory.TABLE_ALREADY_EXIST -> Log.d(LOG_TAG, "$action: already exist")
+            1 -> Log.d(LOG_TAG, "$action: success")
+            -1 -> Log.d(LOG_TAG, "$action: fail")
             else -> Log.d(LOG_TAG, "$action: unknown code : $result")
         }
     }

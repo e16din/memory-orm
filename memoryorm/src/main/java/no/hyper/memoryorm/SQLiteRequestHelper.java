@@ -24,11 +24,11 @@ class SQLiteRequestHelper {
         for(Field field : entityType.getDeclaredFields()) {
             String fieldName = field.getName();
             if (fieldName.equals("id")){
-                String meta = "PRIMARY KEY,";
+                String meta = getSQLPropertyType(field) +"PRIMARY KEY,";
                 if (autoIncrement) {
-                    meta = "PRIMARY KEY AUTOINCREMENT,";
+                    meta = "INTEGER PRIMARY KEY AUTOINCREMENT,";
                 }
-                sb.append(fieldName + " " + getSQLPropertyType(field) + " " + meta);
+                sb.append(fieldName + " " + meta);
             } else if (!fieldName.startsWith("$")) {
                 sb.append(fieldName + " " + getSQLPropertyType(field) + ",");
             }
