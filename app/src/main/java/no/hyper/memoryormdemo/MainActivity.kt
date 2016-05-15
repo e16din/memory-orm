@@ -28,8 +28,11 @@ class MainActivity : AppCompatActivity() {
         val list = memory.fetchAll(Profile::class.java)
         Log.d(LOG_TAG, list.toString())
 
-        val profile = memory.fetchFirst(Profile::class.java)
-        Log.d(LOG_TAG, profile.toString())
+        var profile = memory.fetchFirst(Profile::class.java)
+        Log.d(LOG_TAG, "fetch first: ${profile.toString()}")
+
+        profile = memory.fetchById(Profile::class.java, "2")
+        Log.d(LOG_TAG, "fetch by id: ${profile.toString()}")
     }
 
     private fun logResult(action: String, result: Number) {
