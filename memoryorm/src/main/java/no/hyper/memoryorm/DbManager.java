@@ -56,5 +56,9 @@ public class DbManager extends SQLiteOpenHelper {
         return db.insert(tableName, null, values);
     }
 
+    public int update(String tableName, ContentValues values, String id) {
+        return db.update(tableName, values, "id=" + id, null);
+    }
+
 }
 

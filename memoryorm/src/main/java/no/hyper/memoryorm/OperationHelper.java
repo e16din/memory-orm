@@ -6,8 +6,8 @@ import android.database.Cursor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Jean on 5/15/2016.
@@ -21,24 +21,7 @@ public class OperationHelper {
     }
 
     public <T> long insert(T entity) {
-        ContentValues values = new ContentValues();
-        for(Field field : entity.getClass().getDeclaredFields()) {
-            if(field.getName().startsWith("$")) continue;
-            field.setAccessible(true);
-            Object value;
-            try {
-                value = field.get(entity);
-                if (value == null) continue;
-                if (isCustomType(field)) {
-                    long id = insert(value);
-                    values.put(field.getName(), String.valueOf(id));
-                } else {
-                    values.put(field.getName(), convertJavaValueToSQLite(value).toString());
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
+        ContentValues values = getEntityValues(entity);
         return db.insert(entity.getClass().getSimpleName(), values);
     }
 
@@ -87,6 +70,43 @@ public class OperationHelper {
         return entity;
     }
 
+    public <T> int update(T entity) {
+        String id = "0";
+        for (Field field : entity.getClass().getDeclaredFields()) {
+            if (field.getName().equals("id")){
+                field.setAccessible(true);
+                try {
+                    id = (String)field.get(entity);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return db.update(entity.getClass().getSimpleName(), getEntityValues(entity), String.valueOf(id));
+    }
+
+    private <T> ContentValues getEntityValues(T entity) {
+        ContentValues values = new ContentValues();
+        for(Field field : entity.getClass().getDeclaredFields()) {
+            if(field.getName().startsWith("$")) continue;
+            field.setAccessible(true);
+            Object value;
+            try {
+                value = field.get(entity);
+                if (value == null) continue;
+                if (isCustomType(field)) {
+                    long id = insert(value);
+                    values.put(field.getName(), String.valueOf(id));
+                } else {
+                    values.put(field.getName(), convertJavaValueToSQLite(value).toString());
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return values;
+    }
+
     private <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> nestedObjects = new HashMap<>();
         for(Field field : classType.getDeclaredFields()) {
@@ -116,6 +136,10 @@ public class OperationHelper {
 
     private String getFetchByIdRequest(String name, String id) {
         return "SELECT * FROM " + name + " WHERE id='" + id + "';";
+    }
+
+    private String getUpdateRequest(String tableName, String values, String id) {
+        return "UPDATE " + tableName  + " SET " + values  + " WHERE id=" + id + ";";
     }
 
     private boolean isCustomType(Field field) {

@@ -76,4 +76,11 @@ public class Memory {
         return result;
     }
 
+    public <T> int update(T entity) {
+        db.open();
+        int result = operationHelper.update(entity);
+        db.close();
+        return result;
+    }
+
 }

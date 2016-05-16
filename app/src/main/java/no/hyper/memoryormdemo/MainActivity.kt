@@ -30,6 +30,10 @@ class MainActivity : AppCompatActivity() {
 
         profile = memory.fetchById(Profile::class.java, "2")
         Log.d(LOG_TAG, "fetch by id: ${profile.toString()}")
+
+        profile.gear = Gear("super power", true);
+        val result = memory.update(profile);
+        Log.d(LOG_TAG, "update: $result - ${profile.toString()}")
     }
 
 }
