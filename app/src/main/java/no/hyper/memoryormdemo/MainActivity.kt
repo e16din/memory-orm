@@ -14,14 +14,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val memory = Memory(this)
+        memory.deleteTable(Profile::class.java)
+        memory.createTableFrom(Profile::class.java, true)
 
-        var result = memory.deleteTable(Profile::class.java)
-        logResult("delete table Profile", result)
-
-        result = memory.createTableFrom(Profile::class.java, true)
-        logResult("create table Profile", result)
-
-        val profiles = listOf(Profile("Finn", 13, true), Profile("Jake", 28, false))
+        val sword = Gear("finn sword", true)
+        val profiles = listOf(Profile("Finn", 13, true, sword), Profile("Jake", 28, false))
         val insert = memory.save(profiles)
         Log.d(LOG_TAG, "insert: $insert")
 
@@ -35,11 +32,4 @@ class MainActivity : AppCompatActivity() {
         Log.d(LOG_TAG, "fetch by id: ${profile.toString()}")
     }
 
-    private fun logResult(action: String, result: Number) {
-        when (result) {
-            1 -> Log.d(LOG_TAG, "$action: success")
-            -1 -> Log.d(LOG_TAG, "$action: fail")
-            else -> Log.d(LOG_TAG, "$action: unknown code : $result")
-        }
-    }
 }

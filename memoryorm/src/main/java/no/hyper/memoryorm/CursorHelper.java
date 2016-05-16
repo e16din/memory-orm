@@ -13,14 +13,14 @@ import java.util.Map;
  */
 public class CursorHelper {
 
-    public static <T> T cursorToEntity(Class<T> classType, Cursor cursor) {
+    public static <T> T cursorToEntity(Class<T> classType, Cursor cursor, HashMap<String, Object> nestedObjects) {
         HashMap<String, Object> map = cursorToHashMap(classType, cursor);
         T entity = null;
         try {
             Constructor constructor = classType.getDeclaredConstructors()[0];
             Object[] parameters = getDefaultParametersForConstructor(constructor.getParameterTypes());
             entity = (T)classType.getDeclaredConstructors()[0].newInstance(parameters);
-            entity = bindHashMapToEntity(map, entity);
+            entity = bindHashMapToEntity(map, entity, nestedObjects);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -41,7 +41,8 @@ public class CursorHelper {
                     case "int":
                     case "Integer": map.put(fieldName, cursor.getInt(index)); break;
                     case "boolean": map.put(fieldName, cursor.getInt(index) == 1); break;
-                    default: map.put(fieldName, cursor.getString(index)); break;
+                    case "String" : map.put(fieldName, cursor.getString(index)); break;
+                    default: break;
                 }
             }
         }
@@ -60,17 +61,21 @@ public class CursorHelper {
         return parameters;
     }
 
-    private static <T> T bindHashMapToEntity(HashMap<String, Object> map, T entity) {
-        for(Map.Entry<String, Object> entry : map.entrySet()) {
-            for(Field field : entity.getClass().getDeclaredFields()) {
-                if (field.getName().equals(entry.getKey())) {
-                    try {
-                        field.setAccessible(true);
-                        field.set(entity, entry.getValue());
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
+    private static <T> T bindHashMapToEntity(HashMap<String, Object> values, T entity,
+                                             HashMap<String, Object> nestedObjects) {
+        if (nestedObjects != null) {
+            for(Map.Entry<String, Object> nestedObject : nestedObjects.entrySet()) {
+                values.put(nestedObject.getKey(), nestedObject.getValue());
+            }
+        }
+
+        for(Field field : entity.getClass().getDeclaredFields()) {
+            try {
+                Object value = values.get(field.getName());
+                field.setAccessible(true);
+                field.set(entity, value);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
             }
         }
         return entity;

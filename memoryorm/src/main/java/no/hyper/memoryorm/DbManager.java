@@ -12,9 +12,6 @@ import android.util.Log;
  */
 public class DbManager extends SQLiteOpenHelper {
 
-    public static final  int EXECUTE_SUCCESS = 1;
-    public static final int EXECUTE_FAIL = -1;
-
     private final static String LOG_TAG = DbManager.class.getSimpleName();
     private SQLiteDatabase db;
 
@@ -51,14 +48,8 @@ public class DbManager extends SQLiteOpenHelper {
         return db.rawQuery(request, args);
     }
 
-    public int execute(String request) {
-        try {
-            db.execSQL(request);
-            return EXECUTE_SUCCESS;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return EXECUTE_FAIL;
-        }
+    public void execute(String request) {
+        db.execSQL(request);
     }
 
     public long insert(String tableName, ContentValues values) {

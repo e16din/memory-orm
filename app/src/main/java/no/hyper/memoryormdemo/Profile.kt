@@ -4,7 +4,8 @@ package no.hyper.memoryormdemo
  * Created by Jean on 5/12/2016.
  */
 data class Profile (
-        val name: String,
-        val age: Int,
-        val human: Boolean,
-        val id: String? = null)
+        val name : String,
+        val age : Int,
+        val human : Boolean,
+        val gear : Gear? = null,
+        val id : String? = null)

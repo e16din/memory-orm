@@ -2,8 +2,6 @@ package no.hyper.memoryorm;
 
 import android.content.Context;
 
-import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -22,41 +20,36 @@ public class Memory {
         operationHelper = new OperationHelper(db);
     }
 
-    public <T> int createTableFrom(Class<T> classType) {
+    public <T> void createTableFrom(Class<T> classType) {
         db.open();
-        int result = tableHelper.createTableFrom(classType, false);
+        tableHelper.createTableIfNecessaryFrom(classType, false);
         db.close();
-        return result;
     }
 
-    public <T> int createTableFrom(Class<T> classType, boolean autoincrement) {
+    public <T> void createTableFrom(Class<T> classType, boolean autoincrement) {
         db.open();
-        int result = tableHelper.createTableFrom(classType, autoincrement);
+        tableHelper.createTableIfNecessaryFrom(classType, autoincrement);
         db.close();
-        return result;
     }
 
-    public <T> int deleteTable(Class<T> classType) {
+    public <T> void deleteTable(Class<T> classType) {
         db.open();
-        int result = tableHelper.deleteTable(classType);
+        tableHelper.deleteTable(classType);
         db.close();
-        return result;
     }
 
     public <T> long save(T entity) {
-        int execute = tableHelper.createTableFrom(entity.getClass(), false);
-        if (execute != DbManager.EXECUTE_FAIL) {
-            db.open();
-            long result = operationHelper.insert(entity);
-            db.close();
-            return result;
-        } else {
-            return (long)execute;
-        }
+        db.open();
+        tableHelper.createTableIfNecessaryFrom(entity.getClass(), false);
+        long result = operationHelper.insert(entity);
+        db.close();
+        return result;
     }
 
     public <T> List<Long> save(List<T> list) {
+        if (list.size() <= 0) return null;
         db.open();
+        tableHelper.createTableIfNecessaryFrom(list.get(0).getClass(), false);
         List<Long> rows = operationHelper.insertList(list);
         db.close();
         return rows;
@@ -71,13 +64,9 @@ public class Memory {
 
     public <T> T fetchFirst(Class<T> entityToFetch) {
         db.open();
-        List<T> list = operationHelper.fetchAll(entityToFetch);
+        T entity = operationHelper.fetchFirst(entityToFetch);
         db.close();
-        if (list != null) {
-            return list.get(0);
-        } else {
-            return null;
-        }
+        return entity;
     }
 
     public <T> T fetchById (Class<T> entityToFetch, String id) {
@@ -86,4 +75,5 @@ public class Memory {
         db.close();
         return result;
     }
+
 }
