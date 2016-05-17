@@ -83,4 +83,10 @@ public class Memory {
         return result;
     }
 
+    public <T> long saveOrUpdate(T entity) {
+        db.open();
+        long result = operationHelper.saveOrUpdate(entity);
+        db.close();
+        return result;
+    }
 }

@@ -60,6 +60,11 @@ public class OperationHelper {
         return entity;
     }
 
+    public <T> boolean entityExistInDb(Class<T> classType, String id) {
+        Cursor cursor = db.rawQuery(getFetchByIdRequest(classType.getSimpleName(), id), null);
+        return (cursor.getCount() > 0);
+    }
+
     public <T> T fetchById(Class<T> classType, String id) {
         Cursor cursor = db.rawQuery(getFetchByIdRequest(classType.getSimpleName(), id), null);
         if (cursor.getCount() <= 0) return null;
@@ -71,6 +76,20 @@ public class OperationHelper {
     }
 
     public <T> int update(T entity) {
+        String id = getEntityId(entity);
+        return db.update(entity.getClass().getSimpleName(), getEntityValues(entity), String.valueOf(id));
+    }
+
+    public <T> long saveOrUpdate(T entity) {
+        String id = getEntityId(entity);
+        if (entityExistInDb(entity.getClass(), id)) {
+            return update(entity);
+        } else {
+            return insert(entity);
+        }
+    }
+
+    private <T> String getEntityId(T entity) {
         String id = "0";
         for (Field field : entity.getClass().getDeclaredFields()) {
             if (field.getName().equals("id")){
@@ -82,7 +101,7 @@ public class OperationHelper {
                 }
             }
         }
-        return db.update(entity.getClass().getSimpleName(), getEntityValues(entity), String.valueOf(id));
+        return id;
     }
 
     private <T> ContentValues getEntityValues(T entity) {

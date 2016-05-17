@@ -22,9 +22,6 @@ class MainActivity : AppCompatActivity() {
         val insert = memory.save(profiles)
         Log.d(LOG_TAG, "insert: $insert")
 
-        val list = memory.fetchAll(Profile::class.java)
-        Log.d(LOG_TAG, list.toString())
-
         var profile = memory.fetchFirst(Profile::class.java)
         Log.d(LOG_TAG, "fetch first: ${profile.toString()}")
 
@@ -32,8 +29,15 @@ class MainActivity : AppCompatActivity() {
         Log.d(LOG_TAG, "fetch by id: ${profile.toString()}")
 
         profile.gear = Gear("super power", true);
-        val result = memory.update(profile);
-        Log.d(LOG_TAG, "update: $result - ${profile.toString()}")
+        val update = memory.update(profile);
+        Log.d(LOG_TAG, "update: $update - ${profile.toString()}")
+
+        profile = Profile("Marceline", 1003, false, Gear("guitar", false))
+        val saveOrUpdate = memory.saveOrUpdate(profile)
+        Log.d(LOG_TAG, "saveOrUpdate: $saveOrUpdate - ${profile.toString()}")
+
+        val list = memory.fetchAll(Profile::class.java)
+        Log.d(LOG_TAG, list.toString())
     }
 
 }
