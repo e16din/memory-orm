@@ -6,5 +6,4 @@ package no.hyper.memoryormdemo
 data class Gear (
     val name : String,
     val magical : Boolean,
-    val id : String? = null
-)
+    val id : String? = null)
