@@ -35,8 +35,8 @@ public class OperationHelper {
     }
 
     public <T> List<T> fetchAll(Class<T> classType) {
-        Cursor cursor = db.rawQuery(getFetchAllRequest(classType.getSimpleName()), null);
-        if (cursor.getCount() <= 0) return null;
+        Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName()));
+        if (cursor == null || cursor.getCount() > 0) return null;
 
         cursor.moveToFirst();
         boolean next;
@@ -51,8 +51,8 @@ public class OperationHelper {
     }
 
     public <T> T fetchFirst(Class<T> classType) {
-        Cursor cursor = db.rawQuery(getFetchAllRequest(classType.getSimpleName()), null);
-        if (cursor.getCount() <= 0) return null;
+        Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName()));
+        if (cursor == null || cursor.getCount() > 0) return null;
 
         cursor.moveToFirst();
         T entity = CursorHelper.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
@@ -61,13 +61,17 @@ public class OperationHelper {
     }
 
     public <T> boolean entityExistInDb(Class<T> classType, String id) {
-        Cursor cursor = db.rawQuery(getFetchByIdRequest(classType.getSimpleName(), id), null);
-        return (cursor.getCount() > 0);
+        Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
+        if (cursor != null && cursor.getCount() >= 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public <T> T fetchById(Class<T> classType, String id) {
-        Cursor cursor = db.rawQuery(getFetchByIdRequest(classType.getSimpleName(), id), null);
-        if (cursor.getCount() <= 0) return null;
+        Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
+        if (cursor == null || cursor.getCount() > 0) return null;
 
         cursor.moveToFirst();
         T entity = CursorHelper.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
@@ -86,6 +90,14 @@ public class OperationHelper {
             return update(entity);
         } else {
             return insert(entity);
+        }
+    }
+
+    private Cursor proxyRequest(String request) {
+        try {
+            return db.rawQuery(request, null);
+        } catch (Exception e) {
+            return null;
         }
     }
 
