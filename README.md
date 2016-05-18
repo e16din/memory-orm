@@ -86,13 +86,13 @@ val profile = memory.fetchFirst(Profile::class.java)
 It returns the first row of the table. The object returned is the same type than
 the one you passed as parameter, in this example a `Profile`.
 
-## Fetch a row from the table by id
+## Fetch a row from the table by ID
 
 ```kotlin
 memory.fetchById(Profile::class.java, "2")
 ```
 
-It returns the row of the table with the same id you passed in the second
+It returns the row of the table with the same ID you passed in the second
 parameter. The object returned is the same type than the one you passed as first
 parameter.
 
@@ -108,7 +108,7 @@ memory.update(profile)
 ## Save or update a row
 
 If you don't know whether or not a value exists in your database, you can use
-the method `saveOrUpdate`, which will check if the object has an id and if it
+the method `saveOrUpdate`, which will check if the object has an ID and if it
 exist inside your database. If it exists, it'll update the existing record;
 otherwise it will create a new one.
 
