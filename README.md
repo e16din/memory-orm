@@ -45,26 +45,32 @@ val sword = Gear("finn sword", true)
 val profiles = listOf(Profile("Finn", 13, true, sword), Profile("Jake", 28, false))
 val insert = memory.save(profiles)  // "save" method checks if the table need to be create before inserting
 ```
+It returns you the row number in the table or `-1` if the insertion failed.
+
 ## Fetch rows from a table
 ```
-memory.fetchAll(Profile::class.java)
+val profiles = memory.fetchAll(Profile::class.java)
 ```
+It returns a list of all the row in the table. The type of the list is the same than the one you passed as parameter. In this exemple `List<Profile>`.
 
 ## Fetch the row value of a table
 ```
-memory.fetchFirst(Profile::class.java)
+val profile = memory.fetchFirst(Profile::class.java)
 ```
+It returns the first row of the table. The object returned is the same type than the one you passed as parameter.
 
 ## Fetch a row from the table by id
 ```
 memory.fetchById(Profile::class.java, "2")
 ```
+It returns the row of the table with the same id you passed in the second parameter. The object returned is the same type than the one you passed as first parameter.
 
 ## Update a row
 ```
 profile.gear = Gear("super power", true)
 val update = memory.update(profile)
 ```
+It returns you the row number in the table or `-1` if the update failed.
 
 ## Save or update a row
 if you don't know wether a value exists or not in your database, you can use the method `saveOrUpdate`, it will check if the object has an id and if it exist inside your database. Yes => update, No => insert.
@@ -73,3 +79,4 @@ profile = Profile("Marceline", 1003, false, Gear("guitar", false))
 val saveOrUpdate = memory.saveOrUpdate(profile)
 Log.d(LOG_TAG, "saveOrUpdate: $saveOrUpdate - ${profile.toString()}")
 ```
+It returns you the row number in the table or `-1` if the insert/update failed.
