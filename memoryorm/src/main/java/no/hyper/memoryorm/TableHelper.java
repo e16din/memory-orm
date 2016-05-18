@@ -1,7 +1,5 @@
 package no.hyper.memoryorm;
 
-import android.database.Cursor;
-
 import java.lang.reflect.Field;
 
 /**
@@ -17,7 +15,7 @@ public class TableHelper {
 
     public <T> void createTableIfNecessaryFrom(Class<T> classType, boolean autoincrement) {
         for(Field field : classType.getDeclaredFields()) {
-            if (isCustomType(field)) {
+            if (!field.getName().startsWith("$") && isCustomType(field)) {
                 createTableIfNecessaryFrom(field.getType(), autoincrement);
             }
         }
