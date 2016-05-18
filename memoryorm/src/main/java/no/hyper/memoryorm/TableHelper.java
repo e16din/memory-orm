@@ -1,6 +1,8 @@
 package no.hyper.memoryorm;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.List;
 
 /**
  * Created by Jean on 5/15/2016.
@@ -15,22 +17,48 @@ public class TableHelper {
 
     public <T> void createTableIfNecessaryFrom(Class<T> classType, boolean autoincrement) {
         for(Field field : classType.getDeclaredFields()) {
-            if (!field.getName().startsWith("$") && isCustomType(field)) {
+            if (field.getName().startsWith("$")) {
+                continue;
+            } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+                createLiaisonTables(classType, field, autoincrement);
+            } else if (isCustomType(field)) {
                 createTableIfNecessaryFrom(field.getType(), autoincrement);
             }
         }
-        String request = getCreateTableRequest(classType, autoincrement);
-        db.execute(request);
+        db.execute(getCreateTableRequest(classType, autoincrement));
     }
 
     public <T> void deleteTable(Class<T> classType) {
         for(Field field : classType.getDeclaredFields()) {
+            if (field.getName().startsWith("$")) {
+                continue;
+            } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+                deleteLiaisonTables(classType, field);
+            } else if (isCustomType(field)) {
+                deleteTable(field.getType());
+            }
             if (isCustomType(field)) {
                 deleteTable(field.getType());
             }
         }
-        String request = getDeleteTableRequest(classType.getSimpleName());
-        db.execute(request);
+        db.execute(getDeleteTableRequest(classType.getSimpleName()));
+    }
+
+    private <T, U> void deleteLiaisonTables(Class<T> classType, Field list) {
+        Class<U> actualListType = getActualListType(list);
+        db.execute(getDeleteJunctionTableRequest(classType.getSimpleName(), actualListType.getSimpleName()));
+        deleteTable(actualListType);
+    }
+
+    private <T, U> void createLiaisonTables(Class<T> classType, Field list, boolean autoincrement) {
+        Class<U> actualListType = getActualListType(list);
+        db.execute(getCreateJunctionTableRequest(classType.getSimpleName(), actualListType.getSimpleName()));
+        createTableIfNecessaryFrom(actualListType, autoincrement);
+    }
+
+    private <T> Class<T> getActualListType(Field list) {
+        ParameterizedType listType = (ParameterizedType) list.getGenericType();
+        return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
     private <T> String getCreateTableRequest(Class<T> classType, boolean autoIncrement) {
@@ -49,6 +77,11 @@ public class TableHelper {
         }
         sb.deleteCharAt(sb.length() - 1);
         return "CREATE TABLE IF NOT EXISTS " + classType.getSimpleName() + "(" + sb.toString() + ");";
+    }
+
+    private String getCreateJunctionTableRequest(String leftTable, String rightTable) {
+        return "CREATE TABLE IF NOT EXISTS " + leftTable + "_" + rightTable + " (id_" + leftTable + " INTEGER, "
+                + " id_" + rightTable +" INTEGER);";
     }
 
     private boolean isCustomType(Field field) {
@@ -74,6 +107,10 @@ public class TableHelper {
 
     private static String getDeleteTableRequest(String name) {
         return "DROP TABLE IF EXISTS " + name + ";";
+    }
+
+    private String getDeleteJunctionTableRequest(String leftTable, String rightTable) {
+        return "DROP TABLE IF EXISTS " + leftTable + "_" + rightTable + ";";
     }
 
 }
