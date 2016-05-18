@@ -7,5 +7,5 @@ data class Profile (
         var name : String,
         var age : Int,
         var human : Boolean,
-        var gear : Gear? = null,
+        var gear : List<Gear>? = null,
         var id : String? = null)

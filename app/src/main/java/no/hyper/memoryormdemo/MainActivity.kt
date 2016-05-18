@@ -17,27 +17,10 @@ class MainActivity : AppCompatActivity() {
         memory.deleteTable(Profile::class.java)
         memory.createTableFrom(Profile::class.java, true)
 
-        val sword = Gear("finn sword", true)
-        val profiles = listOf(Profile("Finn", 13, true, sword), Profile("Jake", 28, false))
-        val insert = memory.save(profiles)
-        Log.d(LOG_TAG, "insert: $insert")
-
-        var profile = memory.fetchFirst(Profile::class.java)
-        Log.d(LOG_TAG, "fetch first: ${profile.toString()}")
-
-        profile = memory.fetchById(Profile::class.java, "2")
-        Log.d(LOG_TAG, "fetch by id: ${profile.toString()}")
-
-        profile.gear = Gear("super power", true);
-        val update = memory.update(profile);
-        Log.d(LOG_TAG, "update: $update - ${profile.toString()}")
-
-        profile = Profile("Marceline", 1003, false, Gear("guitar", false))
-        val saveOrUpdate = memory.saveOrUpdate(profile)
-        Log.d(LOG_TAG, "saveOrUpdate: $saveOrUpdate - ${profile.toString()}")
-
-        val list = memory.fetchAll(Profile::class.java)
-        Log.d(LOG_TAG, list.toString())
+        /*val sword = Gear("axe", true)
+        val shield = Gear("shield", false)
+        val profile = Profile("ragnar", 30, true, listOf(sword, shield))
+        memory.save(profile)*/
     }
 
 }
