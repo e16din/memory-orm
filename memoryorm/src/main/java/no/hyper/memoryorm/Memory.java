@@ -1,6 +1,7 @@
 package no.hyper.memoryorm;
 
 import android.content.Context;
+import android.database.Cursor;
 
 import java.util.List;
 
@@ -88,5 +89,17 @@ public class Memory {
         long result = operationHelper.saveOrUpdate(entity);
         db.close();
         return result;
+    }
+
+    public void openDb() {
+        this.db.open();
+    }
+
+    public void closeDb() {
+        this.db.close();
+    }
+
+    public Cursor rawQuery(String request, String[] args) {
+        return db.rawQuery(request, args);
     }
 }

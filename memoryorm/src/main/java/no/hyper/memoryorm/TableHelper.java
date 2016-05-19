@@ -20,12 +20,13 @@ public class TableHelper {
             if (field.getName().startsWith("$")) {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                createLiaisonTables(classType, field, autoincrement);
+                createManyToOneRelationTable(classType, field, autoincrement);
             } else if (isCustomType(field)) {
                 createTableIfNecessaryFrom(field.getType(), autoincrement);
             }
         }
-        db.execute(getCreateTableRequest(classType, autoincrement));
+        String request = getCreateTableRequest(classType, autoincrement, null);
+        db.execute(request);
     }
 
     public <T> void deleteTable(Class<T> classType) {
@@ -33,7 +34,7 @@ public class TableHelper {
             if (field.getName().startsWith("$")) {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                deleteLiaisonTables(classType, field);
+                deleteRelationTables(field);
             } else if (isCustomType(field)) {
                 deleteTable(field.getType());
             }
@@ -41,16 +42,15 @@ public class TableHelper {
         db.execute(getDeleteTableRequest(classType.getSimpleName()));
     }
 
-    private <T, U> void deleteLiaisonTables(Class<T> classType, Field list) {
-        Class<U> actualListType = getActualListType(list);
-        db.execute(getDeleteJunctionTableRequest(classType.getSimpleName(), actualListType.getSimpleName()));
+    private <T> void deleteRelationTables(Field list) {
+        Class<T> actualListType = getActualListType(list);
         deleteTable(actualListType);
     }
 
-    private <T, U> void createLiaisonTables(Class<T> classType, Field list, boolean autoincrement) {
-        Class<U> actualListType = getActualListType(list);
-        db.execute(getCreateJunctionTableRequest(classType.getSimpleName(), actualListType.getSimpleName()));
-        createTableIfNecessaryFrom(actualListType, autoincrement);
+    private <T, U> void createManyToOneRelationTable(Class<T> classType, Field field, boolean autoincrement) {
+        Class<U> actualListType = getActualListType(field);
+        String request = getCreateTableRequest(actualListType, autoincrement, classType.getSimpleName());
+        db.execute(request);
     }
 
     private <T> Class<T> getActualListType(Field list) {
@@ -58,9 +58,14 @@ public class TableHelper {
         return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
-    private <T> String getCreateTableRequest(Class<T> classType, boolean autoIncrement) {
+    private <T> String getCreateTableRequest(Class<T> classType, boolean autoIncrement, String foreignKey) {
+        String content = getSqlTableContent(classType.getDeclaredFields(), autoIncrement, foreignKey);
+        return "CREATE TABLE IF NOT EXISTS " + classType.getSimpleName() + "(" + content + ");";
+    }
+
+    private String getSqlTableContent(Field[] fields, boolean autoIncrement, String foreignKey) {
         StringBuilder sb = new StringBuilder();
-        for(Field field : classType.getDeclaredFields()) {
+        for(Field field : fields) {
             String fieldName = field.getName();
             if (fieldName.equals("id")){
                 String meta = getSQLPropertyType(field) +"PRIMARY KEY,";
@@ -72,8 +77,12 @@ public class TableHelper {
                 sb.append(fieldName + " " + getSQLPropertyType(field) + ",");
             }
         }
-        sb.deleteCharAt(sb.length() - 1);
-        return "CREATE TABLE IF NOT EXISTS " + classType.getSimpleName() + "(" + sb.toString() + ");";
+        if (foreignKey != null) {
+            sb.append("id_" + foreignKey + " INTEGER");
+        } else {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        return sb.toString();
     }
 
     private String getCreateJunctionTableRequest(String leftTable, String rightTable) {
