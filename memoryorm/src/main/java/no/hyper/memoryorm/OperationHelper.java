@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,16 @@ public class OperationHelper {
         if (cursor == null || cursor.getCount() > 0) return null;
 
         cursor.moveToFirst();
+        T entity = CursorHelper.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
+        cursor.close();
+        return entity;
+    }
+
+    public <T> T fetchLast(Class<T> classType) {
+        Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName()));
+        if (cursor == null || cursor.getCount() > 0) return null;
+
+        cursor.moveToLast();
         T entity = CursorHelper.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
         cursor.close();
         return entity;
@@ -124,8 +135,12 @@ public class OperationHelper {
             Object value;
             try {
                 value = field.get(entity);
-                if (value == null) continue;
-                if (isCustomType(field)) {
+                if (value == null) {
+                    continue;
+                } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+                    insertInLiaisonTable(entity, field);
+                    values.put(field.getName(), String.valueOf(true));
+                } else if (isCustomType(field)) {
                     long id = insert(value);
                     values.put(field.getName(), String.valueOf(id));
                 } else {
@@ -138,14 +153,56 @@ public class OperationHelper {
         return values;
     }
 
+    private <T, U> void insertInLiaisonTable(T entity, Field field) {
+        try {
+            field.setAccessible(true);
+            List<U> items = (List<U>)field.get(entity);
+            db.beginTransaction();
+            for(U item : items) {
+                long insertId = insert(item);
+                ContentValues values = new ContentValues();
+                String leftTable = entity.getClass().getSimpleName();
+                String rightTable = item.getClass().getSimpleName();
+                values.put("id_" + leftTable, getIdFromEntity(entity));
+                values.put("id_" + rightTable, insertId);
+                db.insert(leftTable + "_" + rightTable, values);
+            }
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private <T> Long getIdFromEntity(T entity) {
+        try {
+            Field lastIdField = entity.getClass().getField("id");
+            return (Long)lastIdField.get(entity);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> nestedObjects = new HashMap<>();
         for(Field field : classType.getDeclaredFields()) {
-            if (isCustomType(field)) {
+            if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+                fetchNestedList(field, cursor);
+            } else if (isCustomType(field)) {
                 nestedObjects.put(field.getName(), fetchNestedObject(field, cursor));
             }
         }
         return  nestedObjects;
+    }
+
+    private List<Object> fetchNestedList(Field field, Cursor cursor) {
+        int index = cursor.getColumnIndex(field.getName());
+        long id = cursor.getLong(index);
+        return fetchById(field.getType(), String.valueOf(id));
     }
 
     private Object fetchNestedObject(Field field, Cursor cursor) {
@@ -167,10 +224,6 @@ public class OperationHelper {
 
     private String getFetchByIdRequest(String name, String id) {
         return "SELECT * FROM " + name + " WHERE id='" + id + "';";
-    }
-
-    private String getUpdateRequest(String tableName, String values, String id) {
-        return "UPDATE " + tableName  + " SET " + values  + " WHERE id=" + id + ";";
     }
 
     private boolean isCustomType(Field field) {

@@ -37,9 +37,6 @@ public class TableHelper {
             } else if (isCustomType(field)) {
                 deleteTable(field.getType());
             }
-            if (isCustomType(field)) {
-                deleteTable(field.getType());
-            }
         }
         db.execute(getDeleteTableRequest(classType.getSimpleName()));
     }

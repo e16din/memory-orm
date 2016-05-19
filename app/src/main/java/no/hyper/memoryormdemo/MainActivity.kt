@@ -17,10 +17,12 @@ class MainActivity : AppCompatActivity() {
         memory.deleteTable(Profile::class.java)
         memory.createTableFrom(Profile::class.java, true)
 
-        /*val sword = Gear("axe", true)
+        val sword = Gear("axe", true)
         val shield = Gear("shield", false)
         val profile = Profile("ragnar", 30, true, listOf(sword, shield))
-        memory.save(profile)*/
+        val idProfile = memory.save(profile)
+
+
     }
 
 }
