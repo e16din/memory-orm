@@ -1,5 +1,6 @@
 package no.hyper.memoryormdemo
 
+import android.database.Cursor
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -21,8 +22,16 @@ class MainActivity : AppCompatActivity() {
         val shield = Gear("shield", false)
         val profile = Profile("ragnar", 30, true, listOf(sword, shield))
         val idProfile = memory.save(profile)
+        Log.d(LOG_TAG, "profile id: $idProfile")
 
+        var list = memory.fetchAll(Profile::class.java)
+        list.forEach { Log.d(LOG_TAG, it.toString()) }
 
+        var list2 = memory.fetchAll(Gear::class.java)
+        list2.forEach { Log.d(LOG_TAG, it.toString()) }
+
+        //val result = memory.fetchAll(Profile::class.java)
+        //Log.d(LOG_TAG, "profiles: $result")*/
     }
 
 }

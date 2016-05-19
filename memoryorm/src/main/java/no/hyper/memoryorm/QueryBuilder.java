@@ -34,13 +34,18 @@ public class QueryBuilder {
     }
 
     public QueryBuilder from(String table) {
+        from = "from " + table;
         return this;
     }
 
     public QueryBuilder where(String condition) {
+        this.condition = "WHERE " + condition;
         return this;
     }
 
+    public QueryBuilder innerJoinById(String rightTable, String leftColumn, String rightColumn) {
+        join += " INNER JOIN " + rightTable +
+                " ON " + leftColumn + " = " + rightColumn;
         return this;
     }
 

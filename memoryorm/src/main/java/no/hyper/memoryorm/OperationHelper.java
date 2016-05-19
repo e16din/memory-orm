@@ -8,7 +8,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Jean on 5/15/2016.
@@ -22,8 +21,19 @@ public class OperationHelper {
     }
 
     public <T> long insert(T entity) {
-        ContentValues values = getEntityValues(entity);
-        return db.insert(entity.getClass().getSimpleName(), values);
+        long idEntity = -1;
+        List<Field> nestedLists = hasNestedListObjects(entity);
+        if (nestedLists.size() > 0) {
+            ContentValues values = getEntityValues(entity);
+            idEntity = db.insert(entity.getClass().getSimpleName(), values);
+            for(Field list : nestedLists) {
+                insertInRelationTable(entity, idEntity, list);
+            }
+        } else {
+            ContentValues values = getEntityValues(entity);
+            idEntity = db.insert(entity.getClass().getSimpleName(), values);
+        }
+        return idEntity;
     }
 
     public <T> List<Long> insertList(List<T> list) {
@@ -37,7 +47,7 @@ public class OperationHelper {
 
     public <T> List<T> fetchAll(Class<T> classType) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName()));
-        if (cursor == null || cursor.getCount() > 0) return null;
+        if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
         boolean next;
@@ -127,6 +137,16 @@ public class OperationHelper {
         return id;
     }
 
+    private <T> List<Field> hasNestedListObjects(T entity) {
+        List<Field> fields = new ArrayList<>();
+        for(Field field : entity.getClass().getDeclaredFields()) {
+            if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+                fields.add(field);
+            }
+        }
+        return fields;
+    }
+
     private <T> ContentValues getEntityValues(T entity) {
         ContentValues values = new ContentValues();
         for(Field field : entity.getClass().getDeclaredFields()) {
@@ -138,8 +158,7 @@ public class OperationHelper {
                 if (value == null) {
                     continue;
                 } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                    insertInLiaisonTable(entity, field);
-                    values.put(field.getName(), String.valueOf(true));
+                    values.put(field.getName(), "1");
                 } else if (isCustomType(field)) {
                     long id = insert(value);
                     values.put(field.getName(), String.valueOf(id));
@@ -153,22 +172,15 @@ public class OperationHelper {
         return values;
     }
 
-    private <T, U> void insertInLiaisonTable(T entity, Field field) {
+    private <T, U> void insertInRelationTable(T entity, long idEntity, Field field) {
         try {
             field.setAccessible(true);
             List<U> items = (List<U>)field.get(entity);
-            db.beginTransaction();
             for(U item : items) {
-                long insertId = insert(item);
-                ContentValues values = new ContentValues();
-                String leftTable = entity.getClass().getSimpleName();
-                String rightTable = item.getClass().getSimpleName();
-                values.put("id_" + leftTable, getIdFromEntity(entity));
-                values.put("id_" + rightTable, insertId);
-                db.insert(leftTable + "_" + rightTable, values);
+                ContentValues values = getEntityValues(item);
+                values.put("id_" + entity.getClass().getSimpleName(), idEntity);
+                db.insert(item.getClass().getSimpleName(), values);
             }
-            db.setTransactionSuccessful();
-            db.endTransaction();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -188,21 +200,53 @@ public class OperationHelper {
     }
 
     private <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
-        HashMap<String, Object> nestedObjects = new HashMap<>();
+        /*HashMap<String, Object> nestedObjects = new HashMap<>();
         for(Field field : classType.getDeclaredFields()) {
             if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                fetchNestedList(field, cursor);
+                nestedObjects.put(field.getName(), fetchNestedList(classType, field, cursor));
             } else if (isCustomType(field)) {
                 nestedObjects.put(field.getName(), fetchNestedObject(field, cursor));
             }
-        }
-        return  nestedObjects;
+        }*/
+        return  null;//nestedObjects;
     }
 
-    private List<Object> fetchNestedList(Field field, Cursor cursor) {
+    private <T> List<Object> fetchNestedList(Class<T> classType, Field field, Cursor cursor) {
         int index = cursor.getColumnIndex(field.getName());
-        long id = cursor.getLong(index);
-        return fetchById(field.getType(), String.valueOf(id));
+        int hasNestedList = cursor.getInt(index);
+        if (hasNestedList == 1) {
+            long idEntity = cursor.getColumnIndex("id");
+            List<String> subFields = new ArrayList<>();
+            for(Field subField : getActualListType(field).getDeclaredFields()) {
+                if (!subField.getName().startsWith("$")) {
+                    subFields.add(getActualListType(field).getSimpleName() + "." + subField.getName());
+                }
+            }
+
+            QueryBuilder queryBuilder = new QueryBuilder()
+                    .select()
+                    .fields(subFields)
+                    .from(classType.getSimpleName())
+                    .innerJoinById(classType.getSimpleName() + "_" + getActualListType(field).getSimpleName(),
+                            classType.getSimpleName() + ".id",
+                            classType.getSimpleName() + "_" + getActualListType(field).getSimpleName() + ".id_" +
+                                    classType.getSimpleName())
+                    .innerJoinById(getActualListType(field).getSimpleName(),
+                            classType.getSimpleName() + "_" + getActualListType(field).getSimpleName() + ".id_" +
+                                    getActualListType(field).getSimpleName(),
+                            getActualListType(field).getSimpleName() + ".id")
+                    .where(classType.getSimpleName() + ".id = " + idEntity);
+            String request = queryBuilder.toSqlRequest();
+            Cursor list = db.rawQuery(request, null);
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    private <T> Class<T> getActualListType(Field list) {
+        ParameterizedType listType = (ParameterizedType) list.getGenericType();
+        return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
     private Object fetchNestedObject(Field field, Cursor cursor) {
