@@ -58,7 +58,7 @@ public class Memory {
 
     public <T> List<T>  fetchAll(Class<T> classType) {
         db.open();
-        List<T> result = operationHelper.fetchAll(classType);
+        List<T> result = operationHelper.fetchAll(classType, null);
         db.close();
         return result;
     }

@@ -8,4 +8,5 @@ data class Profile (
         var age : Int,
         var human : Boolean,
         var gear : List<Gear>? = null,
+        var house : House? = null,
         var id : String? = null)

@@ -1,6 +1,5 @@
 package no.hyper.memoryormdemo
 
-import android.database.Cursor
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -18,20 +17,22 @@ class MainActivity : AppCompatActivity() {
         memory.deleteTable(Profile::class.java)
         memory.createTableFrom(Profile::class.java, true)
 
-        val sword = Gear("axe", true)
+        val axe = Gear("axe", true)
         val shield = Gear("shield", false)
-        val profile = Profile("ragnar", 30, true, listOf(sword, shield))
-        val idProfile = memory.save(profile)
-        Log.d(LOG_TAG, "profile id: $idProfile")
+        val hytta = House("hytta", "Scandinavia")
+        val ragnar = Profile("ragnar", 30, true, listOf(axe, shield), hytta)
+        memory.save(ragnar)
 
-        var list = memory.fetchAll(Profile::class.java)
-        list.forEach { Log.d(LOG_TAG, it.toString()) }
+        val sword = Gear("sword", true)
+        val treeHouse = House("TreeHouse", "candy Kingdom")
+        val finn = Profile("fin", 13, true, listOf(sword), treeHouse)
+        memory.save(finn)
 
-        var list2 = memory.fetchAll(Gear::class.java)
-        list2.forEach { Log.d(LOG_TAG, it.toString()) }
+        val jake = Profile("jake", 28, false)
+        memory.save(jake)
 
-        //val result = memory.fetchAll(Profile::class.java)
-        //Log.d(LOG_TAG, "profiles: $result")*/
+        val result = memory.fetchFirst(Profile::class.java)
+        Log.d(LOG_TAG, result.toString())
     }
 
 }
