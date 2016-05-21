@@ -82,7 +82,7 @@ public class OperationHelper {
 
     public <T> T fetchFirst(Class<T> classType) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName(), null));
-        if (cursor == null || cursor.getCount() > 0) return null;
+        if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
         T entity = CursorHelper.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
@@ -90,7 +90,7 @@ public class OperationHelper {
         return entity;
     }
 
-    public <T> boolean entityExistInDb(Class<T> classType, String id) {
+    public <T> boolean entityExistInDb(Class<T> classType, long id) {
         Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
         if (cursor != null && cursor.getCount() >= 0) {
             return true;
@@ -99,9 +99,9 @@ public class OperationHelper {
         }
     }
 
-    public <T> T fetchById(Class<T> classType, String id) {
+    public <T> T fetchById(Class<T> classType, long id) {
         Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
-        if (cursor == null || cursor.getCount() > 0) return null;
+        if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
         HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
@@ -111,12 +111,12 @@ public class OperationHelper {
     }
 
     public <T> int update(T entity) {
-        String id = getEntityId(entity);
+        long id = getEntityId(entity);
         return db.update(entity.getClass().getSimpleName(), getEntityValues(entity), String.valueOf(id));
     }
 
     public <T> long saveOrUpdate(T entity) {
-        String id = getEntityId(entity);
+        long id = getEntityId(entity);
         if (entityExistInDb(entity.getClass(), id)) {
             return update(entity);
         } else {
@@ -132,13 +132,13 @@ public class OperationHelper {
         }
     }
 
-    private <T> String getEntityId(T entity) {
-        String id = "0";
+    private <T> long getEntityId(T entity) {
+        long id = 0;
         for (Field field : entity.getClass().getDeclaredFields()) {
             if (field.getName().equals("id")){
                 field.setAccessible(true);
                 try {
-                    id = (String)field.get(entity);
+                    id = field.getLong(entity);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -256,7 +256,7 @@ public class OperationHelper {
     private Object fetchNestedObject(Field field, Cursor cursor) {
         int index = cursor.getColumnIndex(field.getName());
         long id = cursor.getLong(index);
-        return fetchById(field.getType(), String.valueOf(id));
+        return fetchById(field.getType(), id);
     }
 
     private Object convertJavaValueToSQLite(Object value) {
@@ -278,7 +278,7 @@ public class OperationHelper {
         return sb.toString();
     }
 
-    private String getFetchByIdRequest(String name, String id) {
+    private String getFetchByIdRequest(String name, long id) {
         return "SELECT * FROM " + name + " WHERE id='" + id + "';";
     }
 

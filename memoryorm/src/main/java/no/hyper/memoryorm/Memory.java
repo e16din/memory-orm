@@ -70,7 +70,7 @@ public class Memory {
         return entity;
     }
 
-    public <T> T fetchById (Class<T> entityToFetch, String id) {
+    public <T> T fetchById (Class<T> entityToFetch, long id) {
         db.open();
         T result = operationHelper.fetchById(entityToFetch, id);
         db.close();

@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         val jake = Profile("jake", 28, false)
         memory.save(jake)
 
-        val result = memory.fetchFirst(Profile::class.java)
+        val result = memory.fetchById(Profile::class.java, 3)
         Log.d(LOG_TAG, result.toString())
     }
 
