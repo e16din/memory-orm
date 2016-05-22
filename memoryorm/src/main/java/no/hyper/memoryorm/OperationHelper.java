@@ -92,7 +92,7 @@ public class OperationHelper {
 
     public <T> boolean entityExistInDb(Class<T> classType, long id) {
         Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
-        if (cursor != null && cursor.getCount() >= 0) {
+        if (cursor != null && cursor.getCount() > 0) {
             return true;
         } else {
             return false;

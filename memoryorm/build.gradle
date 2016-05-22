@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 5
-        versionName "0.1.4"
+        versionCode 6
+        versionName "0.1.5"
     }
     buildTypes {
         release {
@@ -34,7 +34,7 @@ ext {
     artifact = 'memoryorm'
 
     libraryDescription = 'This library is an ORM for android developed in Java with kotlin usage in mind'
-    libraryVersion = '0.1.4'
+    libraryVersion = '0.1.5'
 
     developerId = 'jeantuffier'
     developerName = 'Jean Tuffier'
