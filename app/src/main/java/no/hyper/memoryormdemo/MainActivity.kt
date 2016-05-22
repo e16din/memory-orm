@@ -14,7 +14,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val memory = Memory(this)
-        memory.deleteTable(Profile::class.java)
         memory.createTableFrom(Profile::class.java)
 
         val axe = Gear("axe", false)
@@ -26,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         val ragnar = Profile("Ragnar", 35, true, listOf(axe, shield), house)
         val gandalf = Profile("Gandalf", 70, true, listOf(staff))
 
-        memory.save(listOf(ragnar, gandalf))
+        memory.saveOrUpdate(listOf(ragnar, gandalf))
 
         memory.fetchAll(Profile::class.java).forEach {
             Log.d(LOG_TAG, it.toString())

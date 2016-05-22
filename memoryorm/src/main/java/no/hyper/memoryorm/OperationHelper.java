@@ -91,7 +91,7 @@ public class OperationHelper {
         return entity;
     }
 
-    public <T> boolean entityExistInDb(Class<T> classType, long id) {
+    public <T> boolean entityExistInDb(Class<T> classType, String id) {
         Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
         if (cursor != null && cursor.getCount() > 0) {
             return true;
@@ -101,7 +101,7 @@ public class OperationHelper {
     }
 
     public <T> T fetchById(Class<T> classType, long id) {
-        Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
+        Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), String.valueOf(id)));
         if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
@@ -111,13 +111,13 @@ public class OperationHelper {
         return entity;
     }
 
-    public <T> int update(T entity) {
-        long id = getEntityId(entity);
+    public <T> long update(T entity) {
+        String id = getEntityId(entity);
         return db.update(entity.getClass().getSimpleName(), getEntityValues(entity), String.valueOf(id));
     }
 
     public <T> long saveOrUpdate(T entity) {
-        long id = getEntityId(entity);
+        String id = getEntityId(entity);
         if (entityExistInDb(entity.getClass(), id)) {
             return update(entity);
         } else {
@@ -133,13 +133,13 @@ public class OperationHelper {
         }
     }
 
-    private <T> long getEntityId(T entity) {
-        long id = 0;
+    private <T> String getEntityId(T entity) {
+        String id = "-1";
         for (Field field : entity.getClass().getDeclaredFields()) {
             if (field.getName().equals("id")){
                 field.setAccessible(true);
                 try {
-                    id = field.getLong(entity);
+                    id = (String)field.get(entity);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -279,7 +279,7 @@ public class OperationHelper {
         return sb.toString();
     }
 
-    private String getFetchByIdRequest(String name, long id) {
+    private String getFetchByIdRequest(String name, String id) {
         return "SELECT * FROM " + name + " WHERE id='" + id + "';";
     }
 
