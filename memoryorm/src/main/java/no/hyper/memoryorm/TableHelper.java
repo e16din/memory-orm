@@ -15,14 +15,14 @@ public class TableHelper {
         this.db = db;
     }
 
-    public <T> void createTableIfNecessaryFrom(Class<T> classType) {
+    public <T> void createTableFrom(Class<T> classType) {
         for(Field field : classType.getDeclaredFields()) {
             if (field.getName().startsWith("$")) {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
                 createManyToOneRelationTable(classType, field);
             } else if (isCustomType(field)) {
-                createTableIfNecessaryFrom(field.getType());
+                createTableFrom(field.getType());
             }
         }
         String request = getCreateTableRequest(classType, null);
@@ -82,11 +82,6 @@ public class TableHelper {
         return sb.toString();
     }
 
-    private String getCreateJunctionTableRequest(String leftTable, String rightTable) {
-        return "CREATE TABLE IF NOT EXISTS " + leftTable + "_" + rightTable + " (id_" + leftTable + " INTEGER, "
-                + " id_" + rightTable +" INTEGER);";
-    }
-
     private boolean isCustomType(Field field) {
         try {
             if (field.getType().isPrimitive()) {
@@ -110,10 +105,6 @@ public class TableHelper {
 
     private static String getDeleteTableRequest(String name) {
         return "DROP TABLE IF EXISTS " + name + ";";
-    }
-
-    private String getDeleteJunctionTableRequest(String leftTable, String rightTable) {
-        return "DROP TABLE IF EXISTS " + leftTable + "_" + rightTable + ";";
     }
 
 }

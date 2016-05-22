@@ -3,7 +3,6 @@ package no.hyper.memoryorm;
 import android.content.Context;
 import android.database.Cursor;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class Memory {
 
     public <T> void createTableFrom(Class<T> classType) {
         db.open();
-        tableHelper.createTableIfNecessaryFrom(classType);
+        tableHelper.createTableFrom(classType);
         db.close();
     }
 
@@ -37,7 +36,6 @@ public class Memory {
 
     public <T> long save(T entity) {
         db.open();
-        tableHelper.createTableIfNecessaryFrom(entity.getClass());
         long result = operationHelper.insert(entity);
         db.close();
         return result;
@@ -46,7 +44,6 @@ public class Memory {
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
         db.open();
-        tableHelper.createTableIfNecessaryFrom(list.get(0).getClass());
         List<Long> rows = operationHelper.insertList(list);
         db.close();
         return rows;
@@ -82,7 +79,6 @@ public class Memory {
 
     public <T> long saveOrUpdate(T entity) {
         db.open();
-        tableHelper.createTableIfNecessaryFrom(entity.getClass());
         long result = operationHelper.saveOrUpdate(entity);
         db.close();
         return result;
@@ -91,7 +87,6 @@ public class Memory {
     public <T> List<Long> saveOrUpdate(List<T> list) {
         db.open();
         List<Long> ids = new ArrayList<>();
-        tableHelper.createTableIfNecessaryFrom(list.get(0).getClass());
         for(T entity : list) {
             ids.add(operationHelper.saveOrUpdate(entity));
         }
@@ -110,4 +105,5 @@ public class Memory {
     public Cursor rawQuery(String request, String[] args) {
         return db.rawQuery(request, args);
     }
+
 }
