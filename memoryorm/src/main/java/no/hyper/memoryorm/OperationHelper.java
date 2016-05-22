@@ -8,6 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Jean on 5/15/2016.
@@ -21,7 +22,7 @@ public class OperationHelper {
     }
 
     public <T> long insert(T entity) {
-        long idEntity = -1;
+        long rowId = -1;
         List<Field> nestedLists = hasNestedListObjects(entity.getClass());
         List<Field> nestedObjects = hasNestedObjects(entity.getClass());
         ContentValues entityValues = getEntityValues(entity);
@@ -35,23 +36,23 @@ public class OperationHelper {
                     if (actualObject == null) continue;
 
                     ContentValues objectValues = getEntityValues(actualObject);
-                    long id = db.insert(object.getType().getSimpleName(), objectValues);
-                    entityValues.put(object.getName(), id);
+                    long rowIdNested = db.insert(object.getType().getSimpleName(), objectValues);
+                    entityValues.put(object.getName(), rowIdNested);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        idEntity = db.insert(entity.getClass().getSimpleName(), entityValues);
+        rowId = db.insert(entity.getClass().getSimpleName(), entityValues);
 
         if (nestedLists.size() > 0) {
             for(Field list : nestedLists) {
-                insertInRelationTable(entity, idEntity, list);
+                insertInRelationTable(entity, rowId, list);
             }
         }
 
-        return idEntity;
+        return rowId;
     }
 
     public <T> List<Long> insertList(List<T> list) {
@@ -191,14 +192,14 @@ public class OperationHelper {
         return values;
     }
 
-    private <T, U> void insertInRelationTable(T entity, long idEntity, Field field) {
+    private <T, U> void insertInRelationTable(T entity, long rowId, Field field) {
         try {
             field.setAccessible(true);
             List<U> items = (List<U>)field.get(entity);
             if (items == null) return;
             for(U item : items) {
                 ContentValues values = getEntityValues(item);
-                values.put("id_" + entity.getClass().getSimpleName(), idEntity);
+                values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
                 db.insert(item.getClass().getSimpleName(), values);
             }
         } catch (IllegalAccessException e) {
@@ -213,9 +214,9 @@ public class OperationHelper {
 
         if (nestedLists.size() > 0) {
             for (Field list : nestedLists) {
-                int index = cursor.getColumnIndex("id");
-                long idEntity = cursor.getLong(index);
-                List<Object> relatedList = fetchNestedList(classType, getActualListType(list), idEntity);
+                int index = cursor.getColumnIndex("rowid");
+                long rowid = cursor.getLong(index);
+                List<Object> relatedList = fetchNestedList(classType, getActualListType(list), rowid);
                 mapNestedObjects.put(list.getName(), relatedList);
             }
         }
@@ -230,7 +231,7 @@ public class OperationHelper {
         return mapNestedObjects;
     }
 
-    private <T, U> List<U> fetchNestedList(Class<T> classType, Class<U> listType, long id) {
+    private <T, U> List<U> fetchNestedList(Class<T> classType, Class<U> listType, long rowid) {
         List<String> fields = new ArrayList<>();
         for(Field field : listType.getDeclaredFields()) {
             if (field.getName().startsWith("$")) {
@@ -242,7 +243,7 @@ public class OperationHelper {
             }
         }
 
-        String condition = "id_" + classType.getSimpleName() + " = " + id;
+        String condition = "rowId_" + classType.getSimpleName() + " = " + rowid;
         List<U> items = fetchAll(listType, condition);
 
         return items;
@@ -268,7 +269,7 @@ public class OperationHelper {
 
     private String getFetchAllRequest(String table, String condition) {
         StringBuilder sb = new StringBuilder();
-        sb.append("SELECT * FROM ");
+        sb.append("SELECT ROWID, * FROM ");
         sb.append(table);
         if (condition != null) {
             sb.append(" WHERE ");

@@ -15,17 +15,17 @@ public class TableHelper {
         this.db = db;
     }
 
-    public <T> void createTableIfNecessaryFrom(Class<T> classType, boolean autoincrement) {
+    public <T> void createTableIfNecessaryFrom(Class<T> classType) {
         for(Field field : classType.getDeclaredFields()) {
             if (field.getName().startsWith("$")) {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                createManyToOneRelationTable(classType, field, autoincrement);
+                createManyToOneRelationTable(classType, field);
             } else if (isCustomType(field)) {
-                createTableIfNecessaryFrom(field.getType(), autoincrement);
+                createTableIfNecessaryFrom(field.getType());
             }
         }
-        String request = getCreateTableRequest(classType, autoincrement, null);
+        String request = getCreateTableRequest(classType, null);
         db.execute(request);
     }
 
@@ -47,9 +47,9 @@ public class TableHelper {
         deleteTable(actualListType);
     }
 
-    private <T, U> void createManyToOneRelationTable(Class<T> classType, Field field, boolean autoincrement) {
+    private <T, U> void createManyToOneRelationTable(Class<T> classType, Field field) {
         Class<U> actualListType = getActualListType(field);
-        String request = getCreateTableRequest(actualListType, autoincrement, classType.getSimpleName());
+        String request = getCreateTableRequest(actualListType, classType.getSimpleName());
         db.execute(request);
     }
 
@@ -58,27 +58,24 @@ public class TableHelper {
         return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
-    private <T> String getCreateTableRequest(Class<T> classType, boolean autoIncrement, String foreignKey) {
-        String content = getSqlTableContent(classType.getDeclaredFields(), autoIncrement, foreignKey);
+    private <T> String getCreateTableRequest(Class<T> classType, String foreignKey) {
+        String content = getSqlTableContent(classType.getDeclaredFields(), foreignKey);
         return "CREATE TABLE IF NOT EXISTS " + classType.getSimpleName() + "(" + content + ");";
     }
 
-    private String getSqlTableContent(Field[] fields, boolean autoIncrement, String foreignKey) {
+    private String getSqlTableContent(Field[] fields, String foreignKey) {
         StringBuilder sb = new StringBuilder();
         for(Field field : fields) {
             String fieldName = field.getName();
             if (fieldName.equals("id")){
                 String meta = getSQLPropertyType(field) +"PRIMARY KEY,";
-                if (autoIncrement) {
-                    meta = "INTEGER PRIMARY KEY AUTOINCREMENT,";
-                }
                 sb.append(fieldName + " " + meta);
             } else if (!fieldName.startsWith("$")) {
                 sb.append(fieldName + " " + getSQLPropertyType(field) + ",");
             }
         }
         if (foreignKey != null) {
-            sb.append("id_" + foreignKey + " INTEGER");
+            sb.append("rowId_" + foreignKey + " INTEGER");
         } else {
             sb.deleteCharAt(sb.length() - 1);
         }
