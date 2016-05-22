@@ -3,6 +3,7 @@ package no.hyper.memoryorm;
 import android.content.Context;
 import android.database.Cursor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -89,6 +90,16 @@ public class Memory {
         long result = operationHelper.saveOrUpdate(entity);
         db.close();
         return result;
+    }
+
+    public <T> List<Long> saveOrUpdate(List<T> list) {
+        db.open();
+        List<Long> ids = new ArrayList<>();
+        for(T entity : list) {
+            ids.add(operationHelper.saveOrUpdate(entity));
+        }
+        db.close();
+        return ids;
     }
 
     public void openDb() {
