@@ -14,24 +14,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val memory = Memory(this)
-        memory.deleteTable(Profile::class.java)
-        memory.createTableFrom(Profile::class.java, true)
+        data class Feed(val item: Any, val position: Int, val id: Int? = null)
+        memory.deleteTable(Feed::class.java)
+        memory.createTableFrom(Feed::class.java)
 
-        val axe = Gear("axe", true)
-        val shield = Gear("shield", false)
-        val hytta = House("hytta", "Scandinavia")
-        val ragnar = Profile("ragnar", 30, true, listOf(axe, shield), hytta)
-        memory.save(ragnar)
+        val feeds = mutableListOf<Feed>()
+        feeds.add(Feed(Profile("jean", 23, true), 1))
+        feeds.add(Feed(Profile("jean2", 24, true), 2))
+        feeds.add(Feed(Profile("jean3", 25, true), 3))
+        memory.save(feeds);
 
-        val sword = Gear("sword", true)
-        val treeHouse = House("TreeHouse", "candy Kingdom")
-        val finn = Profile("fin", 13, true, listOf(sword), treeHouse)
-        memory.save(finn)
-
-        val jake = Profile("jake", 28, false)
-        memory.save(jake)
-
-        val result = memory.fetchById(Profile::class.java, 3)
+        val result = memory.fetchAll(Feed::class.java)
         Log.d(LOG_TAG, result.toString())
     }
 

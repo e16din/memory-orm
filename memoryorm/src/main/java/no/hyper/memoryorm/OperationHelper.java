@@ -139,7 +139,7 @@ public class OperationHelper {
                 field.setAccessible(true);
                 try {
                     id = field.getLong(entity);
-                } catch (IllegalAccessException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
