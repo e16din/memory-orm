@@ -63,7 +63,7 @@ public class Memory {
         return entity;
     }
 
-    public <T> T fetchById (Class<T> entityToFetch, long id) {
+    public <T> T fetchById (Class<T> entityToFetch, String id) {
         db.open();
         T result = operationHelper.fetchById(entityToFetch, id);
         db.close();
@@ -75,6 +75,16 @@ public class Memory {
         long result = operationHelper.update(entity);
         db.close();
         return result;
+    }
+
+    public <T> List<Long> update(List<T> list) {
+        db.open();
+        List<Long> ids = new ArrayList<>();
+        for(T entity : list) {
+            ids.add(operationHelper.update(entity));
+        }
+        db.close();
+        return ids;
     }
 
     public <T> long saveOrUpdate(T entity) {
@@ -92,6 +102,12 @@ public class Memory {
         }
         db.close();
         return ids;
+    }
+
+    public <T> void emptyTable(Class<T> classType) {
+        db.open();
+        tableHelper.emptyTable(classType);
+        db.close();
     }
 
     public void openDb() {

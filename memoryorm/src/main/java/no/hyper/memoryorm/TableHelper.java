@@ -47,6 +47,24 @@ public class TableHelper {
         deleteTable(actualListType);
     }
 
+    public <T> void emptyTable(Class<T> classType) {
+        for(Field field : classType.getDeclaredFields()) {
+            if (field.getName().startsWith("$")) {
+                continue;
+            } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+                emptyRelationTables(field);
+            } else if (isCustomType(field)) {
+                emptyTable(field.getType());
+            }
+        }
+        db.execute("DELETE FROM " + classType.getSimpleName());
+    }
+
+    private <T> void emptyRelationTables(Field list) {
+        Class<T> actualListType = getActualListType(list);
+        emptyTable(actualListType);
+    }
+
     private <T, U> void createManyToOneRelationTable(Class<T> classType, Field field) {
         Class<U> actualListType = getActualListType(field);
         String request = getCreateTableRequest(actualListType, classType.getSimpleName());

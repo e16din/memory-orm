@@ -57,7 +57,7 @@ public class DbManager extends SQLiteOpenHelper {
     }
 
     public int update(String tableName, ContentValues values, String id) {
-        return db.update(tableName, values, "id=" + id, null);
+        return db.update(tableName, values, "id='" + id + "'", null);
     }
 
     public void beginTransaction() {
