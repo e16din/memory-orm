@@ -41,11 +41,13 @@ public class DbManager extends SQLiteOpenHelper {
     }
 
     public boolean isDbOpen() {
-        return db.isOpen();
+        return !(db == null || !db.isOpen()) && db.isOpen();
     }
 
     public void closeDb() {
-        db.close();
+        if (db != null && db.isOpen()) {
+            db.close();
+        }
     }
 
     public Cursor rawQuery(String request, String[] args) {

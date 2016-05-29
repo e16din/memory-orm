@@ -21,24 +21,25 @@ public class DbManagerTest {
 
     private static final String DB_NAME = "DbTest";
     private Context context;
+    private DbManager manager;
 
     @Before
     public void setUp() throws Exception {
         context = InstrumentationRegistry.getContext();
-    }
-
-    @After
-    public void finish() {
         context.deleteDatabase(DB_NAME);
+        manager = new DbManager(context, DB_NAME, null, 1);
     }
 
     @Test
-    public void shouldAddExpenseType() throws Exception {
-        DbManager manager = new DbManager(context, DB_NAME, null, 1);
-        Assert.assertNotNull(manager);
-
+    public void shouldOpenDb() throws Exception {
         manager.openDb();
         Assert.assertEquals(true, manager.isDbOpen());
+    }
+
+    @Test
+    public void shouldCloseDb() throws Exception {
+        manager.close();
+        Assert.assertEquals(false, manager.isDbOpen());
     }
 
 }
