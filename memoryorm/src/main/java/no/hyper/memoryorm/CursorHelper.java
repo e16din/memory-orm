@@ -73,6 +73,7 @@ public class CursorHelper {
             try {
                 Object value = values.get(field.getName());
                 field.setAccessible(true);
+                if (value == null) continue;
                 field.set(entity, value);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
