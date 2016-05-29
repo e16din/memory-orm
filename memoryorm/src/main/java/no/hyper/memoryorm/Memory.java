@@ -23,99 +23,99 @@ public class Memory {
     }
 
     public <T> void createTableFrom(Class<T> classType) {
-        db.open();
+        db.openDb();
         tableHelper.createTableFrom(classType);
-        db.close();
+        db.closeDb();
     }
 
     public <T> void deleteTable(Class<T> classType) {
-        db.open();
+        db.openDb();
         tableHelper.deleteTable(classType);
-        db.close();
+        db.closeDb();
     }
 
     public <T> long save(T entity) {
-        db.open();
+        db.openDb();
         long result = operationHelper.insert(entity);
-        db.close();
+        db.closeDb();
         return result;
     }
 
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
-        db.open();
+        db.openDb();
         List<Long> rows = operationHelper.insertList(list);
-        db.close();
+        db.closeDb();
         return rows;
     }
 
     public <T> List<T>  fetchAll(Class<T> classType) {
-        db.open();
+        db.openDb();
         List<T> result = operationHelper.fetchAll(classType, null);
-        db.close();
+        db.closeDb();
         return result;
     }
 
     public <T> T fetchFirst(Class<T> entityToFetch) {
-        db.open();
+        db.openDb();
         T entity = operationHelper.fetchFirst(entityToFetch);
-        db.close();
+        db.closeDb();
         return entity;
     }
 
     public <T> T fetchById (Class<T> entityToFetch, String id) {
-        db.open();
+        db.openDb();
         T result = operationHelper.fetchById(entityToFetch, id);
-        db.close();
+        db.closeDb();
         return result;
     }
 
     public <T> long update(T entity) {
-        db.open();
+        db.openDb();
         long result = operationHelper.update(entity);
-        db.close();
+        db.closeDb();
         return result;
     }
 
     public <T> List<Long> update(List<T> list) {
-        db.open();
+        db.openDb();
         List<Long> ids = new ArrayList<>();
         for(T entity : list) {
             ids.add(operationHelper.update(entity));
         }
-        db.close();
+        db.closeDb();
         return ids;
     }
 
     public <T> long saveOrUpdate(T entity) {
-        db.open();
+        db.openDb();
         long result = operationHelper.saveOrUpdate(entity);
-        db.close();
+        db.closeDb();
         return result;
     }
 
     public <T> List<Long> saveOrUpdate(List<T> list) {
-        db.open();
+        db.openDb();
         List<Long> ids = new ArrayList<>();
         for(T entity : list) {
             ids.add(operationHelper.saveOrUpdate(entity));
         }
-        db.close();
+        db.closeDb();
         return ids;
     }
 
     public <T> void emptyTable(Class<T> classType) {
-        db.open();
+        db.openDb();
         tableHelper.emptyTable(classType);
-        db.close();
+        db.closeDb();
     }
 
     public void openDb() {
-        this.db.open();
+        this.db.openDb();
     }
 
     public void closeDb() {
-        this.db.close();
+        this.db.closeDb();
     }
 
     public Cursor rawQuery(String request, String[] args) {

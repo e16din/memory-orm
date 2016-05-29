@@ -34,13 +34,17 @@ public class DbManager extends SQLiteOpenHelper {
         super(context, dbName, factory, version);
     }
 
-    public void open() {
+    public void openDb() {
         if (db == null || !db.isOpen()) {
             db = this.getWritableDatabase();
         }
     }
 
-    public void close() {
+    public boolean isDbOpen() {
+        return db.isOpen();
+    }
+
+    public void closeDb() {
         db.close();
     }
 
