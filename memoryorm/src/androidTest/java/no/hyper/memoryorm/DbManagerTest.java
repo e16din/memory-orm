@@ -33,6 +33,7 @@ public class DbManagerTest {
     public static void classSetUp() {
         context = InstrumentationRegistry.getContext();
         manager = new DbManager(context, DB_NAME, null, 1);
+        manager.execute("create table " + TABLE_NAME + " (id integer primary key, name text)");
     }
 
     @AfterClass
@@ -57,11 +58,11 @@ public class DbManagerTest {
 
     @Test
     public void shouldExecute() throws Exception {
-        manager.execute("create table " + TABLE_NAME + " (id integer primary key, name text)");
+        manager.execute("delete form " + TABLE_NAME);
     }
 
     @Test
-    public void shouldQuery() throws Exception {
+    public void shouldRawQuery() throws Exception {
         Cursor cursor = manager.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='"
                 + TABLE_NAME  +"'", null);
         Assert.assertEquals(1, cursor.getCount());
@@ -69,11 +70,31 @@ public class DbManagerTest {
 
     @Test
     public void shouldInsert() throws Exception {
+        Assert.assertTrue(insert(1) > 0);
+    }
+
+    @Test
+    public void shouldUpdate() throws Exception {
+        long rowId = insert(2);
         ContentValues values = new ContentValues();
-        values.put("id", 1);
+        values.put("name", "John Doe2");
+        long rowAffected = manager.update(TABLE_NAME, values, String.valueOf(rowId));
+        Assert.assertEquals(1, rowAffected);
+
+        Cursor cursor = manager.rawQuery("SELECT name FROM " + TABLE_NAME  +" where id='" + rowId + "'", null);
+        Assert.assertEquals(1, cursor.getCount());
+
+        cursor.moveToPosition(0);
+        int index = cursor.getColumnIndex("name");
+        String name = cursor.getString(index);
+        Assert.assertEquals("John Doe2", name);
+    }
+
+    private long insert(int id) {
+        ContentValues values = new ContentValues();
+        values.put("id", id);
         values.put("name", "John Doe");
-        long rowId = manager.insert(TABLE_NAME, values);
-        Assert.assertEquals(1, rowId);
+        return manager.insert(TABLE_NAME, values);
     }
 
 }
