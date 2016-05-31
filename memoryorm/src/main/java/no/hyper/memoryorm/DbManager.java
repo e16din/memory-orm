@@ -66,17 +66,5 @@ public class DbManager extends SQLiteOpenHelper {
         return db.update(tableName, values, "id='" + id + "'", null);
     }
 
-    public void beginTransaction() {
-        db.beginTransaction();
-    }
-
-    public void setTransactionSuccessful() {
-        db.setTransactionSuccessful();
-    }
-
-    public void endTransaction() {
-        db.endTransaction();
-    }
-
 }
 
