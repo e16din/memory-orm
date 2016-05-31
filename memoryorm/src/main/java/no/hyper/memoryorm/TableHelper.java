@@ -17,7 +17,7 @@ public class TableHelper {
 
     public <T> void createTableFrom(Class<T> classType) {
         for(Field field : classType.getDeclaredFields()) {
-            if (field.getName().startsWith("$")) {
+            if (field.getName().contains("$")) {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
                 createManyToOneRelationTable(classType, field);
@@ -86,7 +86,7 @@ public class TableHelper {
         for(Field field : fields) {
             String fieldName = field.getName();
             if (fieldName.equals("id")){
-                String meta = getSQLPropertyType(field) +"PRIMARY KEY,";
+                String meta = getSQLPropertyType(field) +" PRIMARY KEY,";
                 sb.append(fieldName + " " + meta);
             } else if (!fieldName.startsWith("$")) {
                 sb.append(fieldName + " " + getSQLPropertyType(field) + ",");
