@@ -8,7 +8,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by Jean on 5/15/2016.
@@ -74,7 +73,7 @@ public class OperationHelper {
 
         do {
             HashMap<String, Object> nestedObject = getNestedObjects(classType, cursor);
-            entities.add(CursorHelper.cursorToEntity(classType, cursor, nestedObject));
+            //entities.add(EntityBuilder.cursorToEntity(classType, cursor, nestedObject));
             next = cursor.moveToNext();
         } while (next);
         cursor.close();
@@ -86,7 +85,7 @@ public class OperationHelper {
         if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
-        T entity = CursorHelper.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
+        T entity = null;//EntityBuilder.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
         cursor.close();
         return entity;
     }
@@ -97,7 +96,7 @@ public class OperationHelper {
 
         cursor.moveToFirst();
         HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
-        T entity = CursorHelper.cursorToEntity(classType, cursor, nestedObjects);
+        T entity = null;//EntityBuilder.cursorToEntity(classType, cursor, nestedObjects);
         cursor.close();
         return entity;
     }
@@ -108,7 +107,7 @@ public class OperationHelper {
 
         cursor.moveToFirst();
         HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
-        T entity = CursorHelper.cursorToEntity(classType, cursor, nestedObjects);
+        T entity = null;//EntityBuilder.cursorToEntity(classType, cursor, nestedObjects);
         cursor.close();
         return entity;
     }
