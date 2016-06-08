@@ -16,16 +16,14 @@ public class TableHelper {
     }
 
     public <T> void createTableFrom(Class<T> classType) {
-        for(Field field : classType.getDeclaredFields()) {
-            if (field.getName().contains("$")) {
-                continue;
-            } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
+        for(Field field : ObjectHelper.getDeclaredFields(classType)) {
+            if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
                 createManyToOneRelationTable(classType, field);
-            } else if (isCustomType(field)) {
+            } else if (ObjectHelper.isCustomType(field)) {
                 createTableFrom(field.getType());
             }
         }
-        String request = getCreateTableRequest(classType, null);
+        String request = getSqlTableCreationRequest(classType, null);
         db.execute(request);
     }
 
@@ -35,14 +33,14 @@ public class TableHelper {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
                 deleteRelationTables(field);
-            } else if (isCustomType(field)) {
+            } else if (ObjectHelper.isCustomType(field)) {
                 deleteTable(field.getType());
             }
         }
-        db.execute(getDeleteTableRequest(classType.getSimpleName()));
+        db.execute(getSqlTableDeletionRequest(classType.getSimpleName()));
     }
 
-    private <T> void deleteRelationTables(Field list) {
+    public <T> void deleteRelationTables(Field list) {
         Class<T> actualListType = getActualListType(list);
         deleteTable(actualListType);
     }
@@ -53,75 +51,36 @@ public class TableHelper {
                 continue;
             } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
                 emptyRelationTables(field);
-            } else if (isCustomType(field)) {
+            } else if (ObjectHelper.isCustomType(field)) {
                 emptyTable(field.getType());
             }
         }
         db.execute("DELETE FROM " + classType.getSimpleName());
     }
 
-    private <T> void emptyRelationTables(Field list) {
+    public <T> void emptyRelationTables(Field list) {
         Class<T> actualListType = getActualListType(list);
         emptyTable(actualListType);
     }
 
-    private <T, U> void createManyToOneRelationTable(Class<T> classType, Field field) {
+    public <T, U> void createManyToOneRelationTable(Class<T> classType, Field field) {
         Class<U> actualListType = getActualListType(field);
-        String request = getCreateTableRequest(actualListType, classType.getSimpleName());
+        String request = getSqlTableCreationRequest(actualListType, classType.getSimpleName());
         db.execute(request);
     }
 
-    private <T> Class<T> getActualListType(Field list) {
+    public <T> Class<T> getActualListType(Field list) {
         ParameterizedType listType = (ParameterizedType) list.getGenericType();
         return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
-    private <T> String getCreateTableRequest(Class<T> classType, String foreignKey) {
-        String content = getSqlTableContent(classType.getDeclaredFields(), foreignKey);
+    public <T> String getSqlTableCreationRequest(Class<T> classType, String foreignKey) {
+        List<Field> fields = ObjectHelper.getDeclaredFields(classType);
+        String content = ObjectHelper.getEquivalentSqlContent(fields, foreignKey);
         return "CREATE TABLE IF NOT EXISTS " + classType.getSimpleName() + "(" + content + ");";
     }
 
-    private String getSqlTableContent(Field[] fields, String foreignKey) {
-        StringBuilder sb = new StringBuilder();
-        for(Field field : fields) {
-            String fieldName = field.getName();
-            if (fieldName.equals("id")){
-                String meta = getSQLPropertyType(field) +" PRIMARY KEY,";
-                sb.append(fieldName + " " + meta);
-            } else if (!fieldName.startsWith("$")) {
-                sb.append(fieldName + " " + getSQLPropertyType(field) + ",");
-            }
-        }
-        if (foreignKey != null) {
-            sb.append("rowId_" + foreignKey + " INTEGER");
-        } else {
-            sb.deleteCharAt(sb.length() - 1);
-        }
-        return sb.toString();
-    }
-
-    private boolean isCustomType(Field field) {
-        try {
-            if (field.getType().isPrimitive()) {
-                return false;
-            }
-            Class.forName("java.lang." + field.getType().getSimpleName());
-            return false;
-        } catch (Exception e) {
-            return true;
-        }
-    }
-
-    private String getSQLPropertyType(Field field) {
-        if (isCustomType(field)) return "INTEGER";
-        switch (field.getType().getSimpleName()) {
-            case "boolean" :
-            case "int": return "INTEGER";
-            default : return "TEXT";
-        }
-    }
-
-    private static String getDeleteTableRequest(String name) {
+    public static String getSqlTableDeletionRequest(String name) {
         return "DROP TABLE IF EXISTS " + name + ";";
     }
 

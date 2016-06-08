@@ -12,6 +12,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.List;
+
 /**
  * Created by Jean on 5/31/2016.
  */
@@ -39,6 +41,22 @@ public class TableHelperTest {
 
     }
 
+    private class Group {
+
+        public String id;
+        public String name;
+        public Person chef;
+        public List<Person> members;
+
+        public Group(String id, String name, Person chef, List<Person> members) {
+            this.id = id;
+            this.name = name;
+            this.chef = chef;
+            this.members = members;
+        }
+
+    }
+
     @BeforeClass
     public static void classSetUp() {
         context = InstrumentationRegistry.getContext();
@@ -59,6 +77,13 @@ public class TableHelperTest {
     @After
     public void finish() {
         manager.closeDb();
+    }
+
+    @Test
+    public void shouldGetCreateTableRequest() {
+        String personRequest = tableHelper.getSqlTableCreationRequest(Person.class, null);
+        Assert.assertEquals("CREATE TABLE IF NOT EXISTS Person(id TEXT PRIMARY KEY,name TEXT,active INTEGER," +
+                "age INTEGER);", personRequest);
     }
 
     @Test
