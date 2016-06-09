@@ -1,6 +1,7 @@
 package no.hyper.memoryorm;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,10 +28,10 @@ public class ObjectHelper {
     /**
      * Return true or false if the field pass as parameter is a custom type
      */
-    public static boolean isCustomType(Field field) {
+    public static <T> boolean isCustomType(Class<T> classType) {
         try {
-            if (field.getType().isPrimitive()) return false;
-            Class.forName("java.lang." + field.getType().getSimpleName());
+            if (classType.isPrimitive()) return false;
+            Class.forName("java.lang." + classType.getSimpleName());
             return false;
         } catch (Exception e) {
             return true;
@@ -38,12 +39,19 @@ public class ObjectHelper {
     }
 
     /**
+     * return true if the field type is List, else false
+     */
+    public static boolean isAList(Field field) {
+        return field.getType().getSimpleName().equals(List.class.getSimpleName());
+    }
+
+    /**
      * return the equivalent sql type of a java type
      * @return boolean, int and custom type return INTEGER. Everything else return TEXT
      */
-    public static String getEquivalentSqlType(Field field) {
-        if (isCustomType(field)) return "INTEGER";
-        switch (field.getType().getSimpleName()) {
+    public static <T> String getEquivalentSqlType(Class<T> classType) {
+        if (isCustomType(classType)) return "INTEGER";
+        switch (classType.getSimpleName()) {
             case "boolean" :
             case "int": return "INTEGER";
             default : return "TEXT";
@@ -64,10 +72,10 @@ public class ObjectHelper {
         for(Field field : fields) {
             String fieldName = field.getName();
             if (fieldName.equals("id")){
-                String meta = getEquivalentSqlType(field) +" PRIMARY KEY,";
+                String meta = getEquivalentSqlType(field.getType()) +" PRIMARY KEY,";
                 sb.append(fieldName + " " + meta);
             } else {
-                sb.append(fieldName + " " + getEquivalentSqlType(field) + ",");
+                sb.append(fieldName + " " + getEquivalentSqlType(field.getType()) + ",");
             }
         }
         if (foreignKey != null) {
@@ -76,6 +84,14 @@ public class ObjectHelper {
             sb.deleteCharAt(sb.length() - 1);
         }
         return sb.toString();
+    }
+
+    /**
+     * return the class type of object contained by the list
+     */
+    public static <T> Class<T> getActualListType(Field list) {
+        ParameterizedType listType = (ParameterizedType) list.getGenericType();
+        return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
 }

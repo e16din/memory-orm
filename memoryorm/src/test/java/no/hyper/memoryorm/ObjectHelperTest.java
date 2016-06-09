@@ -5,6 +5,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -91,6 +92,15 @@ public class ObjectHelperTest {
         Assert.assertTrue(contentGroup.contains("name TEXT"));
         Assert.assertTrue(contentGroup.contains("chef INTEGER"));
         Assert.assertTrue(contentGroup.contains("members INTEGER"));
+    }
+
+    @Test
+    public void shouldGetActualListType() {
+        for(Field field : ObjectHelper.getDeclaredFields(Group.class)) {
+            if (ObjectHelper.isAList(field)) {
+                Assert.assertEquals(Person.class, ObjectHelper.getActualListType(field));
+            }
+        }
     }
 
     private void assertNumberOfFields(int number, List<Field> fields) {
