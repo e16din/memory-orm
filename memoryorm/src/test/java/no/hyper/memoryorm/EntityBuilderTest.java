@@ -101,8 +101,8 @@ public class EntityBuilderTest {
 
         Assert.assertEquals(valuesGroup.get("id"), mapGroup.get("id"));
         Assert.assertEquals(valuesGroup.get("name"), mapGroup.get("name"));
-        Assert.assertEquals(valuesGroup.get("chef"), mapGroup.get("chef"));
-        Assert.assertEquals(valuesGroup.get("members"), mapGroup.get("members"));
+        Assert.assertEquals(null, mapGroup.get("chef"));
+        Assert.assertEquals(null, mapGroup.get("members"));
     }
 
     @Test
@@ -174,18 +174,8 @@ public class EntityBuilderTest {
         Mockito.when(cursor.getColumnIndex("name")).thenReturn(1);
         Mockito.when(cursor.getColumnIndex("age")).thenReturn(2);
         Mockito.when(cursor.getColumnIndex("active")).thenReturn(3);
-        Mockito.when(cursor.getString(0)).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return (String)values.get("id");
-            }
-        });
-        Mockito.when(cursor.getString(1)).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return (String)values.get("name");
-            }
-        });
+        Mockito.when(cursor.getString(0)).thenReturn((String)values.get("id"));
+        Mockito.when(cursor.getString(1)).thenReturn((String)values.get("name"));
         Mockito.when(cursor.getInt(2)).thenReturn((int)values.get("age"));
         Mockito.when(cursor.getInt(3)).thenReturn((int)values.get("active"));
         return cursor;
@@ -197,24 +187,9 @@ public class EntityBuilderTest {
         Mockito.when(cursor.getColumnIndex("name")).thenReturn(1);
         Mockito.when(cursor.getColumnIndex("chef")).thenReturn(2);
         Mockito.when(cursor.getColumnIndex("member")).thenReturn(3);
-        Mockito.when(cursor.getString(0)).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return (String)values.get("id");
-            }
-        });
-        Mockito.when(cursor.getString(1)).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return (String)values.get("name");
-            }
-        });
-        Mockito.when(cursor.getString(2)).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return (String)values.get("chef");
-            }
-        });
+        Mockito.when(cursor.getString(0)).thenReturn((String)values.get("id"));
+        Mockito.when(cursor.getString(1)).thenReturn((String)values.get("name"));
+        Mockito.when(cursor.getInt(2)).thenReturn(1);
         Mockito.when(cursor.getInt(3)).thenReturn(1);
         return cursor;
     }
