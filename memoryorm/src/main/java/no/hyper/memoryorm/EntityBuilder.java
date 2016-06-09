@@ -54,9 +54,8 @@ public class EntityBuilder {
 
     /**
      * return an object of type T binded with the values of the cursor passed.
-     * @param classType: The class of the entity that will be return.
+     * @param classType: The type of the object that will be return.
      * @param cursor: cursor containing the values for the entity.
-     * @return: an entity binded with the cursor values.
      */
     public static <T> HashMap<String, Object> bindCursorToHashMap(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> map = new HashMap<>();
@@ -76,6 +75,11 @@ public class EntityBuilder {
         return map;
     }
 
+    /**
+     * return an object of type T binded with the values present in the cursor
+     * @param classType: The type of the object that will be return.
+     * @param cursor: cursor containing the values for the entity.
+     */
     public static <T> T bindCursorToEntity(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> map = bindCursorToHashMap(classType, cursor);
         T entity = null;

@@ -66,7 +66,7 @@ public class EntityBuilderTest {
     @Test
     public void shouldBindHashMapToEntity() throws Exception {
         Person person = getDefaultInstance(Person.class);
-        HashMap<String, Object> values = getHashMapValues();
+        HashMap<String, Object> values = getHashMapValues(true);
         person = EntityBuilder.bindHashMapToEntity(person, values);
 
         Assert.assertEquals(person.id, values.get("id"));
@@ -86,16 +86,7 @@ public class EntityBuilderTest {
 
     @Test
     public void shouldBindCursorToHashMap() throws Exception {
-        String id = UUID.randomUUID().toString();
-        String name = "John Doe";
-        int age = 25;
-        int active = 1;
-
-        HashMap<String, Object> values = new HashMap<>();
-        values.put("id", id);
-        values.put("name", name);
-        values.put("age", age);
-        values.put("active", active);
+        HashMap<String, Object> values = getHashMapValues(false);
         Cursor cursor = mockCursorObjectForPerson(values);
         HashMap<String, Object> map = EntityBuilder.bindCursorToHashMap(Person.class, cursor);
 
@@ -103,6 +94,15 @@ public class EntityBuilderTest {
         Assert.assertEquals(values.get("name"), map.get("name"));
         Assert.assertEquals(values.get("age"), map.get("age"));
         Assert.assertEquals(true, map.get("active"));
+
+        HashMap<String, Object> valuesGroup = getHashMapGroupCursorValues();
+        Cursor cursorGroup = mockCursorObjectForGroup(valuesGroup);
+        HashMap<String, Object> mapGroup = EntityBuilder.bindCursorToHashMap(Group.class, cursorGroup);
+
+        Assert.assertEquals(valuesGroup.get("id"), mapGroup.get("id"));
+        Assert.assertEquals(valuesGroup.get("name"), mapGroup.get("name"));
+        Assert.assertEquals(valuesGroup.get("chef"), mapGroup.get("chef"));
+        Assert.assertEquals(valuesGroup.get("members"), mapGroup.get("members"));
     }
 
     @Test
@@ -132,12 +132,17 @@ public class EntityBuilderTest {
         return (T)constructor.newInstance(parameters);
     }
 
-    private HashMap<String, Object> getHashMapValues() {
+    private HashMap<String, Object> getHashMapValues(boolean activeAsBoolean) {
         HashMap<String, Object> values = new HashMap<>();
         values.put("id", UUID.randomUUID().toString());
         values.put("name", "John Doe");
         values.put("age", 25);
-        values.put("active", true);
+        if (activeAsBoolean) {
+            values.put("active", true);
+        } else {
+            values.put("active", 1);
+        }
+
         return values;
     }
 
@@ -151,6 +156,15 @@ public class EntityBuilderTest {
         members.add(new Person("wert", "member2", 21, true));
         members.add(new Person("sdfg", "member3", 22, false));
         values.put("members", members);
+        return values;
+    }
+
+    private HashMap<String, Object> getHashMapGroupCursorValues() {
+        HashMap<String, Object> values = new HashMap<>();
+        values.put("id", UUID.randomUUID().toString());
+        values.put("name", "Super group");
+        values.put("chef", "qwer");
+        values.put("members", 1);
         return values;
     }
 
@@ -174,6 +188,34 @@ public class EntityBuilderTest {
         });
         Mockito.when(cursor.getInt(2)).thenReturn((int)values.get("age"));
         Mockito.when(cursor.getInt(3)).thenReturn((int)values.get("active"));
+        return cursor;
+    }
+
+    private Cursor mockCursorObjectForGroup(final HashMap<String, Object> values) throws Exception {
+        Cursor cursor = Mockito.mock(Cursor.class);
+        Mockito.when(cursor.getColumnIndex("id")).thenReturn(0);
+        Mockito.when(cursor.getColumnIndex("name")).thenReturn(1);
+        Mockito.when(cursor.getColumnIndex("chef")).thenReturn(2);
+        Mockito.when(cursor.getColumnIndex("member")).thenReturn(3);
+        Mockito.when(cursor.getString(0)).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                return (String)values.get("id");
+            }
+        });
+        Mockito.when(cursor.getString(1)).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                return (String)values.get("name");
+            }
+        });
+        Mockito.when(cursor.getString(2)).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                return (String)values.get("chef");
+            }
+        });
+        Mockito.when(cursor.getInt(3)).thenReturn(1);
         return cursor;
     }
 
