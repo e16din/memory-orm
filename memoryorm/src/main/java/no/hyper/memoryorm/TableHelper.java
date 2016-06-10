@@ -32,6 +32,30 @@ public class TableHelper {
     }
 
     /**
+     * create the a sql table based on a list variable.
+     * <p>When an object has a list attribute, use this method to create a separate table to save the items inside the
+     * list</p>
+     * @param classType: the class that has the list attribute
+     * @param field: the field from `classType` that is the list
+     */
+    public <T, U> void createManyToOneRelationTable(Class<T> classType, Field field) {
+        Class<U> actualListType = ObjectHelper.getActualListType(field);
+        String request = "";
+        if (ObjectHelper.isCustomType(actualListType)) {
+            request = getSqlTableCreationRequest(actualListType, classType.getSimpleName());
+        } else {
+            switch (actualListType.getSimpleName()) {
+                case "String" : request = "CREATE TABLE IF NOT EXISTS String(rowId_" +
+                        classType.getSimpleName() + " INTEGER, value TEXT);"; break;
+                case "Integer" : request = "CREATE TABLE IF NOT EXISTS Integer(rowId_" +
+                        classType.getSimpleName() + " INTEGER, value INTEGER);"; break;
+            }
+        }
+
+        db.execute(request);
+    }
+
+    /**
      * delete the table based on the class passed as parameter, and its relation tables created from the class' list
      * and custom attributes
      * @param classType: class representing the table to delete
@@ -77,33 +101,20 @@ public class TableHelper {
         db.execute("DELETE FROM " + classType.getSimpleName());
     }
 
+    /**
+     * delete table based on the actual list type
+     * @param field the list field representing the table to empty
+     */
     public <T> void emptyRelationTables(Field field) {
         Class<T> actualListType = ObjectHelper.getActualListType(field);
-        emptyTable(actualListType);
-    }
-
-    /**
-     * create the a sql table based on a list variable.
-     * <p>When an object has a list attribute, use this method to create a separate table to save the items inside the
-     * list</p>
-     * @param classType: the class that has the list attribute
-     * @param field: the field from `classType` that is the list
-     */
-    public <T, U> void createManyToOneRelationTable(Class<T> classType, Field field) {
-        Class<U> actualListType = ObjectHelper.getActualListType(field);
-        String request = "";
         if (ObjectHelper.isCustomType(actualListType)) {
-            request = getSqlTableCreationRequest(actualListType, classType.getSimpleName());
+            deleteTable(field.getType());
         } else {
             switch (actualListType.getSimpleName()) {
-                case "String" : request = "CREATE TABLE IF NOT EXISTS String(rowId_" +
-                        classType.getSimpleName() + " INTEGER, value TEXT);"; break;
-                case "Integer" : request = "CREATE TABLE IF NOT EXISTS Int(rowId_" +
-                        classType.getSimpleName() + " INTEGER, value INTEGER);"; break;
+                case "String" : db.execute("DELETE FROM String"); break;
+                case "Integer" : db.execute("DELETE FROM Integer");
             }
         }
-
-        db.execute(request);
     }
 
     /**

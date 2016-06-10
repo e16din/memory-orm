@@ -139,6 +139,45 @@ public class TableHelperTest {
         Assert.assertEquals(0, cursor2.getCount());
     }
 
+    @Test
+    public void shouldEmptyRelationTables() {
+        tableHelper.createTableFrom(PersonGroup.class);
+
+        ContentValues values = new ContentValues();
+        values.put("id", "personId");
+        values.put("name", "toto");
+        values.put("age", 11);
+        values.put("active", true);
+        long idChef = manager.insert(Person.class.getSimpleName(), values);
+        values = new ContentValues();
+        values.put("id", "personId2");
+        values.put("name", "toto2");
+        values.put("age", 12);
+        values.put("active", true);
+        manager.insert(Person.class.getSimpleName(), values);
+
+        Cursor cursor = manager.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(2, cursor.getCount());
+
+        values = new ContentValues();
+        values.put("id", "groupId");
+        values.put("name", "group");
+        values.put("chef", idChef);
+        values.put("members", 1);
+        values.put("departments", 1);
+        values.put("codes", 1);
+        manager.insert(PersonGroup.class.getSimpleName(), values);
+
+        cursor = manager.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(1, cursor.getCount());
+
+        tableHelper.emptyTable(PersonGroup.class);
+        cursor = manager.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(0, cursor.getCount());
+        cursor = manager.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(0, cursor.getCount());
+    }
+
     private boolean checkIfTableExist(String tableName) {
         Cursor cursor = manager.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='"
                 + Person.class.getSimpleName()  +"'", null);
