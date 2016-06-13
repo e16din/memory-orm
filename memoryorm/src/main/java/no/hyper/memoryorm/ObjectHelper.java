@@ -1,5 +1,7 @@
 package no.hyper.memoryorm;
 
+import android.content.ContentValues;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -43,6 +45,36 @@ public class ObjectHelper {
      */
     public static boolean isAList(Field field) {
         return field.getType().getSimpleName().equals(List.class.getSimpleName());
+    }
+
+    /**
+     * return a list of field for which the type is List
+     * @param classType: the class containing the attibutes to test
+     */
+    public static <T> List<Field> hasListFields(Class<T> classType) {
+        List<Field> fields = new ArrayList<>();
+        for(Field field : getDeclaredFields(classType)) {
+            if (isAList(field)) {
+                fields.add(field);
+            }
+        }
+        return fields;
+    }
+
+    /**
+     * return a list of field that have a custom type
+     * @param classType: the class containing the attibutes to test
+     */
+    public static <T> List<Field> hasNestedObjects(Class<T> classType) {
+        List<Field> fields = new ArrayList<>();
+        for(Field field : getDeclaredFields(classType)) {
+            if (isAList(field)) {
+                continue;
+            } else if (isCustomType(field.getType())) {
+                fields.add(field);
+            }
+        }
+        return fields;
     }
 
     /**
@@ -92,6 +124,34 @@ public class ObjectHelper {
     public static <T> Class<T> getActualListType(Field list) {
         ParameterizedType listType = (ParameterizedType) list.getGenericType();
         return (Class<T>) listType.getActualTypeArguments()[0];
+    }
+
+    public static <T> ContentValues getEntityContentValues(T entity) {
+        ContentValues values = new ContentValues();
+        for(Field field : getDeclaredFields(entity.getClass())) {
+            field.setAccessible(true);
+            Object value;
+            try {
+                value = field.get(entity);
+                if (value == null) {
+                    continue;
+                } else if (isAList(field)) {
+                    values.put(field.getName(), "1");
+                } else {
+                    values.put(field.getName(), convertJavaValueToSQLite(value).toString());
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return values;
+    }
+
+    public static Object convertJavaValueToSQLite(Object value) {
+        switch (value.getClass().getSimpleName()) {
+            case "Boolean" : return ((boolean)value) ? 1 : 0;
+            default : return value;
+        }
     }
 
 }

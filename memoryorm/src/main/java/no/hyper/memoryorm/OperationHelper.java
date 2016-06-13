@@ -20,11 +20,17 @@ public class OperationHelper {
         this.db = db;
     }
 
+    /**
+     * save an object in the corresponding table. If the object has nested object/list of object, they will be save in
+     * their corresponding table.
+     * @param entity: the object to save
+     * @return the id of the row for the object inserted
+     */
     public <T> long insert(T entity) {
         long rowId = -1;
-        List<Field> nestedLists = hasNestedListObjects(entity.getClass());
-        List<Field> nestedObjects = hasNestedObjects(entity.getClass());
-        ContentValues entityValues = getEntityValues(entity);
+        List<Field> nestedLists = ObjectHelper.hasListFields(entity.getClass());
+        List<Field> nestedObjects = ObjectHelper.hasNestedObjects(entity.getClass());
+        ContentValues entityValues = ObjectHelper.getEntityContentValues(entity);
 
         if (nestedObjects.size() > 0) {
             for(Field object : nestedObjects) {
@@ -34,7 +40,7 @@ public class OperationHelper {
 
                     if (actualObject == null) continue;
 
-                    ContentValues objectValues = getEntityValues(actualObject);
+                    ContentValues objectValues = ObjectHelper.getEntityContentValues(actualObject);
                     long rowIdNested = db.insert(object.getType().getSimpleName(), objectValues);
                     entityValues.put(object.getName(), rowIdNested);
                 } catch (IllegalAccessException e) {
@@ -122,7 +128,7 @@ public class OperationHelper {
     }
 
     public <T> long update(T entity, String id) {
-        return db.update(entity.getClass().getSimpleName(), getEntityValues(entity), id);
+        return db.update(entity.getClass().getSimpleName(), ObjectHelper.getEntityContentValues(entity), id);
     }
 
     public <T> long saveOrUpdate(T entity) {
@@ -158,57 +164,13 @@ public class OperationHelper {
         return id;
     }
 
-    private <T> List<Field> hasNestedListObjects(Class<T> classType) {
-        List<Field> fields = new ArrayList<>();
-        for(Field field : classType.getDeclaredFields()) {
-            if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                fields.add(field);
-            }
-        }
-        return fields;
-    }
-
-    private <T> List<Field> hasNestedObjects(Class<T> classType) {
-        List<Field> fields = new ArrayList<>();
-        for(Field field : classType.getDeclaredFields()) {
-            if (field.getName().startsWith("$") || field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                continue;
-            } else if (isCustomType(field)) {
-                fields.add(field);
-            }
-        }
-        return fields;
-    }
-
-    private <T> ContentValues getEntityValues(T entity) {
-        ContentValues values = new ContentValues();
-        for(Field field : entity.getClass().getDeclaredFields()) {
-            if(field.getName().startsWith("$")) continue;
-            field.setAccessible(true);
-            Object value;
-            try {
-                value = field.get(entity);
-                if (value == null) {
-                    continue;
-                } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                    values.put(field.getName(), "1");
-                } else {
-                    values.put(field.getName(), convertJavaValueToSQLite(value).toString());
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return values;
-    }
-
     private <T, U> void insertInRelationTable(T entity, long rowId, Field field) {
         try {
             field.setAccessible(true);
             List<U> items = (List<U>)field.get(entity);
             if (items == null) return;
             for(U item : items) {
-                ContentValues values = getEntityValues(item);
+                ContentValues values = ObjectHelper.getEntityContentValues(item);
                 values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
                 db.insert(item.getClass().getSimpleName(), values);
             }
@@ -219,8 +181,8 @@ public class OperationHelper {
 
     private <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> mapNestedObjects = new HashMap<>();
-        List<Field> nestedLists = hasNestedListObjects(classType);
-        List<Field> nestedObjects = hasNestedObjects(classType);
+        List<Field> nestedLists = ObjectHelper.hasListFields(classType);
+        List<Field> nestedObjects = ObjectHelper.hasNestedObjects(classType);
 
         if (nestedLists.size() > 0) {
             for (Field list : nestedLists) {
@@ -268,13 +230,6 @@ public class OperationHelper {
         int index = cursor.getColumnIndex(field.getName());
         long id = cursor.getLong(index);
         return fetchByRowId(field.getType(), id);
-    }
-
-    private Object convertJavaValueToSQLite(Object value) {
-        switch (value.getClass().getSimpleName()) {
-            case "Boolean" : return ((boolean)value) ? 1 : 0;
-            default : return value;
-        }
     }
 
     private String getFetchAllRequest(String table, String condition) {

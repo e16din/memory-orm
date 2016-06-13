@@ -28,6 +28,7 @@ public class ObjectHelperTest {
         private String name;
         private Person chef;
         private List<Person> members;
+        private List<String> departments;
 
     }
 
@@ -41,15 +42,15 @@ public class ObjectHelperTest {
     public void shouldSayIfCustomType() {
         List<Field> fields = ObjectHelper.getDeclaredFields(Person.class);
         for (Field field : fields) {
-            Assert.assertFalse(ObjectHelper.isCustomType(field));
+            Assert.assertFalse(ObjectHelper.isCustomType(field.getType()));
         }
 
         List<Field> fieldsGroup = ObjectHelper.getDeclaredFields(Group.class);
         for (Field field : fieldsGroup) {
             if (field.getName().equals("chef") || field.getName().equals("members")) {
-                Assert.assertTrue(ObjectHelper.isCustomType(field));
+                Assert.assertTrue(ObjectHelper.isCustomType(field.getType()));
             } else {
-                Assert.assertFalse(ObjectHelper.isCustomType(field));
+                Assert.assertFalse(ObjectHelper.isCustomType(field.getType()));
             }
         }
     }
@@ -60,9 +61,9 @@ public class ObjectHelperTest {
         for (Field field : fields) {
             switch (field.getName()) {
                 case "id":
-                case "name": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field), "TEXT"); break;
+                case "name": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field.getType()), "TEXT"); break;
                 case "age":
-                case "active": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field), "INTEGER"); break;
+                case "active": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field.getType()), "INTEGER"); break;
             }
         }
 
@@ -70,9 +71,9 @@ public class ObjectHelperTest {
         for (Field field : fieldsGroup) {
             switch (field.getName()) {
                 case "id":
-                case "name": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field), "TEXT"); break;
+                case "name": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field.getType()), "TEXT"); break;
                 case "chef":
-                case "members": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field), "INTEGER"); break;
+                case "members": Assert.assertEquals(ObjectHelper.getEquivalentSqlType(field.getType()), "INTEGER"); break;
             }
         }
     }
@@ -101,6 +102,18 @@ public class ObjectHelperTest {
                 Assert.assertEquals(Person.class, ObjectHelper.getActualListType(field));
             }
         }
+    }
+
+    @Test
+    public void shouldReturnListFields() {
+        List<Field> fields = ObjectHelper.hasListFields(Group.class);
+        Assert.assertTrue(fields.size() == 2);
+    }
+
+    @Test
+    public void shouldReturnCustomFields() {
+        List<Field> fields = ObjectHelper.hasNestedObjects(Group.class);
+        Assert.assertTrue(fields.size() == 1);
     }
 
     private void assertNumberOfFields(int number, List<Field> fields) {

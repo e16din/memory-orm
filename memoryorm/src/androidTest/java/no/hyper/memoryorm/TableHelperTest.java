@@ -20,6 +20,8 @@ import java.util.List;
 public class TableHelperTest {
 
     private static final String DB_NAME = "DbTest";
+    private static final String PERSON_SQL_CREATION_TABLE = "CREATE TABLE IF NOT EXISTS Person(id TEXT PRIMARY KEY," +
+            "name TEXT,active INTEGER,age INTEGER);";
 
     private static Context context;
     private static DbManager manager;
@@ -61,9 +63,6 @@ public class TableHelperTest {
         }
 
     }
-
-    private static final String PERSON_SQL_CREATION_TABLE = "CREATE TABLE IF NOT EXISTS Person(id TEXT PRIMARY KEY," +
-            "name TEXT,active INTEGER,age INTEGER);";
 
     @Before
     public void start() {
