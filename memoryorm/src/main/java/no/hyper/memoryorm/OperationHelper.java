@@ -60,6 +60,11 @@ public class OperationHelper {
         return rowId;
     }
 
+    /**
+     * save a list of object in their corresponding tables
+     * @param list: list of object to save
+     * @return the list of rows id
+     */
     public <T> List<Long> insertList(List<T> list) {
         if (list.size() <= 0) return null;
         List<Long> rows = new ArrayList<>();
@@ -69,6 +74,12 @@ public class OperationHelper {
         return rows;
     }
 
+    /**
+     *
+     * @param classType
+     * @param condition
+     * @return
+     */
     public <T> List<T> fetchAll(Class<T> classType, String condition) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName(), condition));
         if (cursor == null || cursor.getCount() <= 0) return null;
@@ -170,16 +181,28 @@ public class OperationHelper {
             List<U> items = (List<U>)field.get(entity);
             if (items == null) return;
             for(U item : items) {
-                ContentValues values = ObjectHelper.getEntityContentValues(item);
-                values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
-                db.insert(item.getClass().getSimpleName(), values);
+                if (ObjectHelper.isCustomType(item.getClass())) {
+                    ContentValues values = ObjectHelper.getEntityContentValues(item);
+                    values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
+                    db.insert(item.getClass().getSimpleName(), values);
+                } else if (item.getClass().getSimpleName().equals("String")) {
+                    ContentValues values = new ContentValues();
+                    values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
+                    values.put("value", (String)item);
+                    db.insert("String", values);
+                } else if (item.getClass().getSimpleName().equals("Integer")) {
+                    ContentValues values = new ContentValues();
+                    values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
+                    values.put("value", (Integer)item);
+                    db.insert("Integer", values);
+                }
             }
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
     }
 
-    private <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
+    public <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> mapNestedObjects = new HashMap<>();
         List<Field> nestedLists = ObjectHelper.hasListFields(classType);
         List<Field> nestedObjects = ObjectHelper.hasNestedObjects(classType);
@@ -188,7 +211,7 @@ public class OperationHelper {
             for (Field list : nestedLists) {
                 int index = cursor.getColumnIndex("rowid");
                 long rowid = cursor.getLong(index);
-                List<Object> relatedList = fetchNestedList(classType, getActualListType(list), rowid);
+                List<Object> relatedList = fetchNestedList(classType, ObjectHelper.getActualListType(list), rowid);
                 mapNestedObjects.put(list.getName(), relatedList);
             }
         }
@@ -203,18 +226,13 @@ public class OperationHelper {
         return mapNestedObjects;
     }
 
-    private <T, U> List<U> fetchNestedList(Class<T> classType, Class<U> listType, long rowid) {
-        List<String> fields = new ArrayList<>();
-        for(Field field : listType.getDeclaredFields()) {
-            if (field.getName().startsWith("$")) {
-                continue;
-            } else if (field.getType().getSimpleName().equals(List.class.getSimpleName())) {
-                fields.add(listType.getSimpleName() + "." + field.getName());
-            } else {
-                fields.add(listType.getSimpleName() + "." + field.getName());
-            }
-        }
-
+    /**
+     * return a the list of objects save in db corresponding to the list attribute.
+     * @param classType: the class containing the list attribute
+     * @param listType: the parametrized type of the list
+     * @param rowid: the row id in db of the object containing the list
+     */
+    public <T, U> List<U> fetchNestedList(Class<T> classType, Class<U> listType, long rowid) {
         String condition = "rowId_" + classType.getSimpleName() + " = " + rowid;
         List<U> items = fetchAll(listType, condition);
 
