@@ -24,13 +24,13 @@ public class Memory {
 
     public <T> void createTableFrom(Class<T> classType) {
         db.openDb();
-        tableHelper.createTableFrom(classType);
+        //tableHelper.createTableFrom(classType);
         db.closeDb();
     }
 
     public <T> void deleteTable(Class<T> classType) {
         db.openDb();
-        tableHelper.deleteTable(classType);
+        //tableHelper.deleteTable(classType);
         db.closeDb();
     }
 
@@ -106,7 +106,7 @@ public class Memory {
 
     public <T> void emptyTable(Class<T> classType) {
         db.openDb();
-        tableHelper.emptyTable(classType);
+        //tableHelper.emptyTable(classType);
         db.closeDb();
     }
 

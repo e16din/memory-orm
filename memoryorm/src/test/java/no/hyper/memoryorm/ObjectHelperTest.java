@@ -106,7 +106,7 @@ public class ObjectHelperTest {
 
     @Test
     public void shouldReturnListFields() {
-        List<Field> fields = ObjectHelper.hasListFields(Group.class);
+        List<Field> fields = ObjectHelper.hasCustomListFields(Group.class);
         Assert.assertTrue(fields.size() == 2);
     }
 

@@ -28,7 +28,7 @@ public class OperationHelper {
      */
     public <T> long insert(T entity) {
         long rowId = -1;
-        List<Field> nestedLists = ObjectHelper.hasListFields(entity.getClass());
+        List<Field> nestedLists = ObjectHelper.hasCustomListFields(entity.getClass());
         List<Field> nestedObjects = ObjectHelper.hasNestedObjects(entity.getClass());
         ContentValues entityValues = ObjectHelper.getEntityContentValues(entity);
 
@@ -181,21 +181,9 @@ public class OperationHelper {
             List<U> items = (List<U>)field.get(entity);
             if (items == null) return;
             for(U item : items) {
-                if (ObjectHelper.isCustomType(item.getClass())) {
-                    ContentValues values = ObjectHelper.getEntityContentValues(item);
-                    values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
-                    db.insert(item.getClass().getSimpleName(), values);
-                } else if (item.getClass().getSimpleName().equals("String")) {
-                    ContentValues values = new ContentValues();
-                    values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
-                    values.put("value", (String)item);
-                    db.insert("String", values);
-                } else if (item.getClass().getSimpleName().equals("Integer")) {
-                    ContentValues values = new ContentValues();
-                    values.put("rowId_" + entity.getClass().getSimpleName(), rowId);
-                    values.put("value", (Integer)item);
-                    db.insert("Integer", values);
-                }
+                ContentValues values = ObjectHelper.getEntityContentValues(item);
+                values.put("id_" + entity.getClass().getSimpleName(), rowId);
+                db.insert(item.getClass().getSimpleName(), values);
             }
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -204,17 +192,17 @@ public class OperationHelper {
 
     public <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> mapNestedObjects = new HashMap<>();
-        List<Field> nestedLists = ObjectHelper.hasListFields(classType);
+        //List<Field> nestedLists = ObjectHelper.hasListFields(classType);
         List<Field> nestedObjects = ObjectHelper.hasNestedObjects(classType);
 
-        if (nestedLists.size() > 0) {
+        /*if (nestedLists.size() > 0) {
             for (Field list : nestedLists) {
                 int index = cursor.getColumnIndex("rowid");
                 long rowid = cursor.getLong(index);
                 List<Object> relatedList = fetchNestedList(classType, ObjectHelper.getActualListType(list), rowid);
                 mapNestedObjects.put(list.getName(), relatedList);
             }
-        }
+        }*/
 
         if (nestedObjects.size() > 0) {
             for (Field object : nestedObjects) {

@@ -51,10 +51,10 @@ public class ObjectHelper {
      * return a list of field for which the type is List
      * @param classType: the class containing the attibutes to test
      */
-    public static <T> List<Field> hasListFields(Class<T> classType) {
+    public static <T> List<Field> hasCustomListFields(Class<T> classType) {
         List<Field> fields = new ArrayList<>();
         for(Field field : getDeclaredFields(classType)) {
-            if (isAList(field)) {
+            if (isAList(field) && isCustomType(getActualListType(field))) {
                 fields.add(field);
             }
         }
@@ -96,10 +96,10 @@ public class ObjectHelper {
      * <p>If one field is named "id", the key word "PRIMARY KEY" will be automatically added to the sql description of
      * the column</p>
      * @param fields: The fields used to create the columns
-     * @param foreignKey: If not null, this value will add a foreign key value in the description
+     * @param foreignKeys: If not null, this value will the foreign keys value in the sql description
      * @return A sql string describing every columns needed in a table
      */
-    public static String getEquivalentSqlContent(List<Field> fields, String foreignKey) {
+    public static String getEquivalentSqlContent(List<Field> fields, List<String> foreignKeys) {
         StringBuilder sb = new StringBuilder();
         for(Field field : fields) {
             String fieldName = field.getName();
@@ -110,11 +110,12 @@ public class ObjectHelper {
                 sb.append(fieldName + " " + getEquivalentSqlType(field.getType()) + ",");
             }
         }
-        if (foreignKey != null) {
-            sb.append("rowId_" + foreignKey + " INTEGER");
-        } else {
-            sb.deleteCharAt(sb.length() - 1);
+        if (foreignKeys != null && foreignKeys.size() > 0) {
+            for(String foreignKey : foreignKeys) {
+                sb.append("rowId_" + foreignKey + " INTEGER,");
+            }
         }
+        sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
 
@@ -126,17 +127,22 @@ public class ObjectHelper {
         return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
-    public static <T> ContentValues getEntityContentValues(T entity) {
+    public static <T, U> ContentValues getEntityContentValues(T entity) {
         ContentValues values = new ContentValues();
         for(Field field : getDeclaredFields(entity.getClass())) {
             field.setAccessible(true);
             Object value;
             try {
                 value = field.get(entity);
-                if (value == null) {
+                if (value == null || (isAList(field) && isCustomType(value.getClass()))) {
                     continue;
-                } else if (isAList(field)) {
-                    values.put(field.getName(), "1");
+                } else if(isAList(field)) {
+                    List<U> list = (List<U>)value;
+                    StringBuilder builder = new StringBuilder();
+                    for (U item : list) {
+                        builder.append(item + "|");
+                    }
+                    builder.deleteCharAt(builder.length() - 1);
                 } else {
                     values.put(field.getName(), convertJavaValueToSQLite(value).toString());
                 }

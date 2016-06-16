@@ -4,6 +4,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.test.InstrumentationRegistry;
 
+import com.google.gson.Gson;
+
 import junit.framework.Assert;
 
 import org.junit.After;
@@ -15,11 +17,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import no.hyper.memoryorm.model.Database;
+
 /**
  * Created by jean on 13.06.2016.
  */
 public class OperationHelperTest {
 
+    private static final String jsonDb = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"},{\"label\":\"id_PersonGroup\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
     private static final String DB_NAME = "DbTest";
     private static int i = 0;
 
@@ -82,7 +87,9 @@ public class OperationHelperTest {
 
     @Test
     public void shouldInsert() {
-        tableHelper.createTableFrom(PersonGroup.class);
+        Gson gson = new Gson();
+        Database db = gson.fromJson(jsonDb, Database.class);
+        tableHelper.createTables(db);
         long id = operationHelper.insert(getGroup());
 
         Assert.assertEquals(1, id);
@@ -92,17 +99,11 @@ public class OperationHelperTest {
 
         cursor = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(3, cursor.getCount());
-
-        cursor = manager.rawQuery("SELECT * FROM String", null);
-        Assert.assertEquals(2, cursor.getCount());
-
-        cursor = manager.rawQuery("SELECT * FROM Integer", null);
-        Assert.assertEquals(2, cursor.getCount());
     }
 
     @Test
     public void shouldInsertList() {
-        tableHelper.createTableFrom(PersonGroup.class);
+        //tableHelper.createTableFrom(PersonGroup.class);
         List<PersonGroup> groups = new ArrayList<>();
         groups.add(getGroup());
         groups.add(getGroup());
@@ -114,7 +115,7 @@ public class OperationHelperTest {
 
     @Test
     public <T> void shouldFetchNestedList() {
-        tableHelper.createTableFrom(PersonGroup.class);
+        //tableHelper.createTableFrom(PersonGroup.class);
         List<PersonGroup> groups = new ArrayList<>();
         groups.add(getGroup());
         groups.add(getGroup());

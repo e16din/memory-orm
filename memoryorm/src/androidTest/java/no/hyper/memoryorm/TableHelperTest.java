@@ -5,23 +5,25 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.test.InstrumentationRegistry;
 
+import com.google.gson.Gson;
+
 import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
 import java.util.List;
+
+import no.hyper.memoryorm.model.Database;
 
 /**
  * Created by Jean on 5/31/2016.
  */
 public class TableHelperTest {
 
+    private static final String jsonDb = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"members\",\"list\":true,\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
     private static final String DB_NAME = "DbTest";
-    private static final String PERSON_SQL_CREATION_TABLE = "CREATE TABLE IF NOT EXISTS Person(id TEXT PRIMARY KEY," +
-            "name TEXT,active INTEGER,age INTEGER);";
 
     private static Context context;
     private static DbManager manager;
@@ -79,50 +81,35 @@ public class TableHelperTest {
     }
 
     @Test
-    public void shouldGetSqlTableCreationRequest() {
-        String personRequest = tableHelper.getSqlTableCreationRequest(Person.class, null);
-        Assert.assertEquals(PERSON_SQL_CREATION_TABLE, personRequest);
-    }
-
-    @Test
-    public void shouldCreateManyToOneRelationTable() {
-        for (Field field : ObjectHelper.getDeclaredFields(PersonGroup.class)) {
-            if (ObjectHelper.isAList(field)) {
-                tableHelper.createManyToOneRelationTable(PersonGroup.class, field);
-            }
-        }
+    public void shouldCreateTables() throws Exception {
+        Gson gson = new Gson();
+        Database db = gson.fromJson(jsonDb, Database.class);
+        tableHelper.createTables(db);
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
-        Assert.assertTrue(checkIfTableExist(String.class.getSimpleName()));
-        Assert.assertTrue(checkIfTableExist(Integer.class.getSimpleName()));
-    }
-
-    @Test
-    public void shouldCreateTable() {
-        tableHelper.createTableFrom(PersonGroup.class);
-        Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
-        Assert.assertTrue(checkIfTableExist(String.class.getSimpleName()));
-        Assert.assertTrue(checkIfTableExist(Integer.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
     }
 
     @Test
-    public void shouldDeleteTable() {
-        tableHelper.createTableFrom(PersonGroup.class);
+    public void shouldDeleteTable() throws Exception {
+        Gson gson = new Gson();
+        Database db = gson.fromJson(jsonDb, Database.class);
+        tableHelper.createTables(db);
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
-        Assert.assertTrue(checkIfTableExist(String.class.getSimpleName()));
-        Assert.assertTrue(checkIfTableExist(Integer.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
 
-        tableHelper.deleteTable(PersonGroup.class);
+        tableHelper.deleteTables(db);
         Assert.assertFalse(checkIfTableExist(Person.class.getSimpleName()));
-        Assert.assertFalse(checkIfTableExist(String.class.getSimpleName()));
-        Assert.assertFalse(checkIfTableExist(Integer.class.getSimpleName()));
         Assert.assertFalse(checkIfTableExist(PersonGroup.class.getSimpleName()));
     }
 
     @Test
-    public void shouldEmptyTable() {
-        tableHelper.createTableFrom(Person.class);
+    public void shouldEmptyTable() throws Exception {
+        Gson gson = new Gson();
+        Database db = gson.fromJson(jsonDb, Database.class);
+        tableHelper.createTables(db);
+        Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
+        Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
+
         ContentValues values = new ContentValues();
         values.put("id", "personId");
         values.put("name", "toto");
@@ -133,48 +120,9 @@ public class TableHelperTest {
         Cursor cursor = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(1, cursor.getCount());
 
-        tableHelper.emptyTable(Person.class);
+        tableHelper.emptyTables(db);
         Cursor cursor2 = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(0, cursor2.getCount());
-    }
-
-    @Test
-    public void shouldEmptyRelationTables() {
-        tableHelper.createTableFrom(PersonGroup.class);
-
-        ContentValues values = new ContentValues();
-        values.put("id", "personId");
-        values.put("name", "toto");
-        values.put("age", 11);
-        values.put("active", true);
-        long idChef = manager.insert(Person.class.getSimpleName(), values);
-        values = new ContentValues();
-        values.put("id", "personId2");
-        values.put("name", "toto2");
-        values.put("age", 12);
-        values.put("active", true);
-        manager.insert(Person.class.getSimpleName(), values);
-
-        Cursor cursor = manager.rawQuery("SELECT * FROM Person", null);
-        Assert.assertEquals(2, cursor.getCount());
-
-        values = new ContentValues();
-        values.put("id", "groupId");
-        values.put("name", "group");
-        values.put("chef", idChef);
-        values.put("members", 1);
-        values.put("departments", 1);
-        values.put("codes", 1);
-        manager.insert(PersonGroup.class.getSimpleName(), values);
-
-        cursor = manager.rawQuery("SELECT * FROM PersonGroup", null);
-        Assert.assertEquals(1, cursor.getCount());
-
-        tableHelper.emptyTable(PersonGroup.class);
-        cursor = manager.rawQuery("SELECT * FROM PersonGroup", null);
-        Assert.assertEquals(0, cursor.getCount());
-        cursor = manager.rawQuery("SELECT * FROM Person", null);
-        Assert.assertEquals(0, cursor.getCount());
     }
 
     private boolean checkIfTableExist(String tableName) {
