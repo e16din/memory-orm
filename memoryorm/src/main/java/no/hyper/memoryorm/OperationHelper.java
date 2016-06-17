@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import no.hyper.memoryorm.model.Column;
+import no.hyper.memoryorm.model.Table;
+
 /**
  * Created by Jean on 5/15/2016.
  */
@@ -28,22 +31,26 @@ public class OperationHelper {
      */
     public <T> long insert(T entity) {
         long rowId = -1;
-        List<Field> nestedLists = ObjectHelper.hasCustomListFields(entity.getClass());
-        List<Field> nestedObjects = ObjectHelper.hasNestedObjects(entity.getClass());
+        List<Column> nestedLists = ObjectHelper.getCustomListColumns(entity.getClass().getSimpleName());
+        List<Column> nestedObjects = ObjectHelper.getNestedObjects(entity.getClass().getSimpleName());
         ContentValues entityValues = ObjectHelper.getEntityContentValues(entity);
 
         if (nestedObjects.size() > 0) {
-            for(Field object : nestedObjects) {
+            for(Column column : nestedObjects) {
                 try {
-                    object.setAccessible(true);
-                    Object actualObject = object.get(entity);
+                    Field field = entity.getClass().getField(column.getLabel());
+                    field.setAccessible(true);
+                    Object actualObject = field.get(entity);
+                    ContentValues nestedValues = ObjectHelper.getEntityContentValues(actualObject);
 
-                    if (actualObject == null) continue;
+                    if (ObjectHelper.isCustomType(column.getType())) {
+                        long id = insert(actualObject);
+                        nestedValues.put("id_" + entity.getClass().getSimpleName(), rowId);
+                    }
 
-                    ContentValues objectValues = ObjectHelper.getEntityContentValues(actualObject);
-                    long rowIdNested = db.insert(object.getType().getSimpleName(), objectValues);
-                    entityValues.put(object.getName(), rowIdNested);
-                } catch (IllegalAccessException e) {
+                    long nestedObjectId = insert(actualObject);
+                    entityValues.put(column.getLabel(), nestedObjectId);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -52,8 +59,17 @@ public class OperationHelper {
         rowId = db.insert(entity.getClass().getSimpleName(), entityValues);
 
         if (nestedLists.size() > 0) {
-            for(Field list : nestedLists) {
-                insertInRelationTable(entity, rowId, list);
+            for(Column column : nestedLists) {
+                try {
+                    Field field = entity.getClass().getField(column.getLabel());
+                    field.setAccessible(true);
+                    Object actualObject = field.get(entity);
+                    ContentValues nestedValues = ObjectHelper.getEntityContentValues(actualObject);
+                    nestedValues.put("id_" + entity.getClass().getSimpleName(), rowId);
+                    insert(actualObject);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -89,7 +105,7 @@ public class OperationHelper {
         List<T> entities = new ArrayList<>();
 
         do {
-            HashMap<String, Object> nestedObject = getNestedObjects(classType, cursor);
+            //HashMap<String, Object> nestedObject = getNestedObjects(classType, cursor);
             //entities.add(EntityBuilder.cursorToEntity(classType, cursor, nestedObject));
             next = cursor.moveToNext();
         } while (next);
@@ -112,7 +128,7 @@ public class OperationHelper {
         if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
-        HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
+        //HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
         T entity = null;//EntityBuilder.cursorToEntity(classType, cursor, nestedObjects);
         cursor.close();
         return entity;
@@ -123,7 +139,7 @@ public class OperationHelper {
         if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
-        HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
+        //HashMap<String, Object> nestedObjects = getNestedObjects(classType, cursor);
         T entity = null;//EntityBuilder.cursorToEntity(classType, cursor, nestedObjects);
         cursor.close();
         return entity;
@@ -190,29 +206,6 @@ public class OperationHelper {
         }
     }
 
-    public <T> HashMap<String, Object> getNestedObjects(Class<T> classType, Cursor cursor) {
-        HashMap<String, Object> mapNestedObjects = new HashMap<>();
-        //List<Field> nestedLists = ObjectHelper.hasListFields(classType);
-        List<Field> nestedObjects = ObjectHelper.hasNestedObjects(classType);
-
-        /*if (nestedLists.size() > 0) {
-            for (Field list : nestedLists) {
-                int index = cursor.getColumnIndex("rowid");
-                long rowid = cursor.getLong(index);
-                List<Object> relatedList = fetchNestedList(classType, ObjectHelper.getActualListType(list), rowid);
-                mapNestedObjects.put(list.getName(), relatedList);
-            }
-        }*/
-
-        if (nestedObjects.size() > 0) {
-            for (Field object : nestedObjects) {
-                Object actualObject = fetchNestedObject(object, cursor);
-                mapNestedObjects.put(object.getName(), actualObject);
-            }
-        }
-
-        return mapNestedObjects;
-    }
 
     /**
      * return a the list of objects save in db corresponding to the list attribute.

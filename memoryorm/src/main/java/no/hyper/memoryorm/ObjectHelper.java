@@ -7,6 +7,9 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.hyper.memoryorm.model.Column;
+import no.hyper.memoryorm.model.Table;
+
 /**
  * Created by jean on 01.06.2016.
  */
@@ -30,11 +33,11 @@ public class ObjectHelper {
     /**
      * Return true or false if the field pass as parameter is a custom type
      */
-    public static <T> boolean isCustomType(Class<T> classType) {
+    public static <T> boolean isCustomType(String classname) {
         try {
-            if (classType.isPrimitive()) return false;
-            Class.forName("java.lang." + classType.getSimpleName());
-            return false;
+            Class c = Class.forName("java.lang." + classname);
+            if (c.isPrimitive() || c != null) return false;
+            else return true;
         } catch (Exception e) {
             return true;
         }
@@ -49,32 +52,32 @@ public class ObjectHelper {
 
     /**
      * return a list of field for which the type is List
-     * @param classType: the class containing the attibutes to test
+     * @param tableName: the class containing the attibutes to test
      */
-    public static <T> List<Field> hasCustomListFields(Class<T> classType) {
-        List<Field> fields = new ArrayList<>();
-        for(Field field : getDeclaredFields(classType)) {
-            if (isAList(field) && isCustomType(getActualListType(field))) {
-                fields.add(field);
+    public static <T> List<Column> getCustomListColumns(String tableName) {
+        Table table = SchemaHelper.getInstance().getTable(tableName);
+        List<Column> columns = new ArrayList<>();
+        for (Column column : table.getColumns()) {
+            if (column.isList() && !isCustomType(column.getLabel())) {
+                columns.add(column);
             }
         }
-        return fields;
+        return columns;
     }
 
     /**
      * return a list of field that have a custom type
-     * @param classType: the class containing the attibutes to test
+     * @param tableName: the class containing the attibutes to test
      */
-    public static <T> List<Field> hasNestedObjects(Class<T> classType) {
-        List<Field> fields = new ArrayList<>();
-        for(Field field : getDeclaredFields(classType)) {
-            if (isAList(field)) {
-                continue;
-            } else if (isCustomType(field.getType())) {
-                fields.add(field);
+    public static <T> List<Column> getNestedObjects(String tableName) {
+        Table table = SchemaHelper.getInstance().getTable(tableName);
+        List<Column> columns = new ArrayList<>();
+        for (Column column : table.getColumns()) {
+            if (!column.isList() && isCustomType(column.getLabel())) {
+                columns.add(column);
             }
         }
-        return fields;
+        return columns;
     }
 
     /**
@@ -82,7 +85,7 @@ public class ObjectHelper {
      * @return boolean, int and custom type return INTEGER. Everything else return TEXT
      */
     public static <T> String getEquivalentSqlType(Class<T> classType) {
-        if (isCustomType(classType)) return "INTEGER";
+        if (isCustomType(classType.getSimpleName())) return "INTEGER";
         switch (classType.getSimpleName()) {
             case "boolean" :
             case "int": return "INTEGER";
@@ -128,25 +131,28 @@ public class ObjectHelper {
     }
 
     public static <T, U> ContentValues getEntityContentValues(T entity) {
+        Class c = entity.getClass();
+        Table table = SchemaHelper.getInstance().getTable(c.getSimpleName());
         ContentValues values = new ContentValues();
-        for(Field field : getDeclaredFields(entity.getClass())) {
-            field.setAccessible(true);
-            Object value;
+        for(Column column : table.getColumns()) {
             try {
-                value = field.get(entity);
-                if (value == null || (isAList(field) && isCustomType(value.getClass()))) {
+                Field field = c.getField(column.getLabel());
+                field.setAccessible(true);
+                Object value = field.get(entity);
+                if (value == null || isCustomType(column.getType())) {
                     continue;
-                } else if(isAList(field)) {
+                } else if(column.isList()) {
                     List<U> list = (List<U>)value;
                     StringBuilder builder = new StringBuilder();
                     for (U item : list) {
                         builder.append(item + "|");
                     }
                     builder.deleteCharAt(builder.length() - 1);
+                    values.put(column.getLabel(), builder.toString());
                 } else {
-                    values.put(field.getName(), convertJavaValueToSQLite(value).toString());
+                    values.put(column.getLabel(), convertJavaValueToSQLite(value).toString());
                 }
-            } catch (IllegalAccessException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

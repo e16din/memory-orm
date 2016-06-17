@@ -84,7 +84,7 @@ public class TableHelperTest {
     public void shouldCreateTables() throws Exception {
         Gson gson = new Gson();
         Database db = gson.fromJson(jsonDb, Database.class);
-        tableHelper.createTables(db);
+        tableHelper.createTables();
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
     }
@@ -93,7 +93,7 @@ public class TableHelperTest {
     public void shouldDeleteTable() throws Exception {
         Gson gson = new Gson();
         Database db = gson.fromJson(jsonDb, Database.class);
-        tableHelper.createTables(db);
+        tableHelper.createTables();
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
 
@@ -106,7 +106,7 @@ public class TableHelperTest {
     public void shouldEmptyTable() throws Exception {
         Gson gson = new Gson();
         Database db = gson.fromJson(jsonDb, Database.class);
-        tableHelper.createTables(db);
+        tableHelper.createTables();
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
 

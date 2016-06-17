@@ -89,7 +89,7 @@ public class OperationHelperTest {
     public void shouldInsert() {
         Gson gson = new Gson();
         Database db = gson.fromJson(jsonDb, Database.class);
-        tableHelper.createTables(db);
+        tableHelper.createTables();
         long id = operationHelper.insert(getGroup());
 
         Assert.assertEquals(1, id);

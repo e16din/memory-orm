@@ -24,8 +24,8 @@ public class TableHelper {
     /**
      * create every table contained in the Database object
      */
-    public void createTables(Database db) {
-        for (Table table : db.tables) {
+    public void createTables() {
+        for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
             createTable(table);
         }
     }
@@ -37,10 +37,16 @@ public class TableHelper {
         StringBuilder content = new StringBuilder();
         content.append("(");
         for (Column column : table.getColumns()) {
-            content.append(column.getLabel() + " ");
-            if (column.isList()) {
-                content.append("text ");
+            content.append(column.getLabel());
+            if (ObjectHelper.isCustomType(column.getType())) {
+                createTable(SchemaHelper.getInstance().getTable(column.getLabel()));
+                if (column.isForeignKey()) {
+                    content.append(" integer ");
+                }
+            } else if (column.isList()) {
+                content.append(" text ");
             } else {
+                content.append(" ");
                 content.append(column.getType());
             }
 
@@ -59,7 +65,7 @@ public class TableHelper {
      * delete all the table represented by the Database object
      */
     public void deleteTables(Database db) {
-        for (Table table : db.tables) {
+        for (Table table : db.getTables()) {
             deleteTable(table);
         }
     }
@@ -76,7 +82,7 @@ public class TableHelper {
      * delete every row of every tables represented by the Database Object
      */
     public void emptyTables(Database db) {
-        for (Table table : db.tables) {
+        for (Table table : db.getTables()) {
             emptyTable(table);
         }
     }

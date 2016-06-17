@@ -7,6 +7,14 @@ import java.util.List;
  */
 public class Database {
 
-    public List<Table> tables;
+    private List<Table> tables;
+
+    public List<Table> getTables() {
+        return tables;
+    }
+
+    public void setTables(List<Table> tables) {
+        this.tables = tables;
+    }
 
 }

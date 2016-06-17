@@ -8,6 +8,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.hyper.memoryorm.model.Column;
+
 /**
  * Created by jean on 01.06.2016.
  */
@@ -42,15 +44,15 @@ public class ObjectHelperTest {
     public void shouldSayIfCustomType() {
         List<Field> fields = ObjectHelper.getDeclaredFields(Person.class);
         for (Field field : fields) {
-            Assert.assertFalse(ObjectHelper.isCustomType(field.getType()));
+            Assert.assertFalse(ObjectHelper.isCustomType(field.getType().getSimpleName()));
         }
 
         List<Field> fieldsGroup = ObjectHelper.getDeclaredFields(Group.class);
         for (Field field : fieldsGroup) {
             if (field.getName().equals("chef") || field.getName().equals("members")) {
-                Assert.assertTrue(ObjectHelper.isCustomType(field.getType()));
+                Assert.assertTrue(ObjectHelper.isCustomType(field.getType().getSimpleName()));
             } else {
-                Assert.assertFalse(ObjectHelper.isCustomType(field.getType()));
+                Assert.assertFalse(ObjectHelper.isCustomType(field.getType().getSimpleName()));
             }
         }
     }
@@ -106,13 +108,13 @@ public class ObjectHelperTest {
 
     @Test
     public void shouldReturnListFields() {
-        List<Field> fields = ObjectHelper.hasCustomListFields(Group.class);
+        List<Column> fields = ObjectHelper.getCustomListColumns(Group.class.getSimpleName());
         Assert.assertTrue(fields.size() == 2);
     }
 
     @Test
     public void shouldReturnCustomFields() {
-        List<Field> fields = ObjectHelper.hasNestedObjects(Group.class);
+        List<Column> fields = ObjectHelper.getNestedObjects(Group.class.getSimpleName());
         Assert.assertTrue(fields.size() == 1);
     }
 
