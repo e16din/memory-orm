@@ -82,7 +82,6 @@ public class ObjectHelper {
 
     /**
      * return the equivalent sql type of a java type
-     * @return boolean, int and custom type return INTEGER. Everything else return TEXT
      */
     public static <T> String getEquivalentSqlType(Class<T> classType) {
         if (isCustomType(classType.getSimpleName())) return "INTEGER";
@@ -90,6 +89,17 @@ public class ObjectHelper {
             case "boolean" :
             case "int": return "INTEGER";
             default : return "TEXT";
+        }
+    }
+
+    /**
+     * return the equivalent sql type of a java type
+     */
+    public static String getEquivalentJavaType(String sqlType) {
+        switch (sqlType) {
+            case "integer" : return "Integer";
+            case "text" : return "String";
+            default : return  "";
         }
     }
 

@@ -22,7 +22,6 @@ import no.hyper.memoryorm.model.Database;
  */
 public class TableHelperTest {
 
-    private static final String jsonDb = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"members\",\"list\":true,\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
     private static final String DB_NAME = "DbTest";
 
     private static Context context;
@@ -82,8 +81,6 @@ public class TableHelperTest {
 
     @Test
     public void shouldCreateTables() throws Exception {
-        Gson gson = new Gson();
-        Database db = gson.fromJson(jsonDb, Database.class);
         tableHelper.createTables();
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
@@ -91,21 +88,17 @@ public class TableHelperTest {
 
     @Test
     public void shouldDeleteTable() throws Exception {
-        Gson gson = new Gson();
-        Database db = gson.fromJson(jsonDb, Database.class);
         tableHelper.createTables();
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
 
-        tableHelper.deleteTables(db);
+        tableHelper.deleteTables();
         Assert.assertFalse(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertFalse(checkIfTableExist(PersonGroup.class.getSimpleName()));
     }
 
     @Test
     public void shouldEmptyTable() throws Exception {
-        Gson gson = new Gson();
-        Database db = gson.fromJson(jsonDb, Database.class);
         tableHelper.createTables();
         Assert.assertTrue(checkIfTableExist(Person.class.getSimpleName()));
         Assert.assertTrue(checkIfTableExist(PersonGroup.class.getSimpleName()));
@@ -120,7 +113,7 @@ public class TableHelperTest {
         Cursor cursor = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(1, cursor.getCount());
 
-        tableHelper.emptyTables(db);
+        tableHelper.emptyTables();
         Cursor cursor2 = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(0, cursor2.getCount());
     }

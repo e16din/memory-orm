@@ -38,13 +38,13 @@ public class TableHelper {
         content.append("(");
         for (Column column : table.getColumns()) {
             content.append(column.getLabel());
-            if (ObjectHelper.isCustomType(column.getType())) {
-                createTable(SchemaHelper.getInstance().getTable(column.getLabel()));
+            if (!column.isList() && ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+                createTable(SchemaHelper.getInstance().getTable(column.getType()));
                 if (column.isForeignKey()) {
-                    content.append(" integer ");
+                    content.append(" integer");
                 }
             } else if (column.isList()) {
-                content.append(" text ");
+                content.append(" text");
             } else {
                 content.append(" ");
                 content.append(column.getType());
@@ -64,8 +64,8 @@ public class TableHelper {
     /**
      * delete all the table represented by the Database object
      */
-    public void deleteTables(Database db) {
-        for (Table table : db.getTables()) {
+    public void deleteTables() {
+        for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
             deleteTable(table);
         }
     }
@@ -81,8 +81,8 @@ public class TableHelper {
     /**
      * delete every row of every tables represented by the Database Object
      */
-    public void emptyTables(Database db) {
-        for (Table table : db.getTables()) {
+    public void emptyTables() {
+        for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
             emptyTable(table);
         }
     }
