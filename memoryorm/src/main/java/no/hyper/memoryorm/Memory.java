@@ -36,7 +36,7 @@ public class Memory {
 
     public <T> long save(T entity) {
         db.openDb();
-        long result = operationHelper.insert(entity);
+        long result = operationHelper.insert(entity, null);
         db.closeDb();
         return result;
     }
@@ -44,7 +44,7 @@ public class Memory {
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
         db.openDb();
-        List<Long> rows = operationHelper.insertList(list);
+        List<Long> rows = operationHelper.insertList(list, null);
         db.closeDb();
         return rows;
     }

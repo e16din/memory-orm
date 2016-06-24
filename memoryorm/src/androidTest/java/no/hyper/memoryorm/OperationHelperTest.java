@@ -24,9 +24,7 @@ import no.hyper.memoryorm.model.Database;
  */
 public class OperationHelperTest {
 
-    private static final String jsonDb = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"},{\"label\":\"id_PersonGroup\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
     private static final String DB_NAME = "DbTest";
-    private static int i = 0;
 
     private static Context context;
     private static DbManager manager;
@@ -87,10 +85,8 @@ public class OperationHelperTest {
 
     @Test
     public void shouldInsert() {
-        Gson gson = new Gson();
-        Database db = gson.fromJson(jsonDb, Database.class);
         tableHelper.createTables();
-        long id = operationHelper.insert(getGroup());
+        long id = operationHelper.insert(getGroup(0), null);
 
         Assert.assertEquals(1, id);
 
@@ -103,39 +99,49 @@ public class OperationHelperTest {
 
     @Test
     public void shouldInsertList() {
-        //tableHelper.createTableFrom(PersonGroup.class);
+        tableHelper.createTables();
         List<PersonGroup> groups = new ArrayList<>();
-        groups.add(getGroup());
-        groups.add(getGroup());
-        groups.add(getGroup());
-        List<Long> ids = operationHelper.insertList(groups);
+        groups.add(getGroup(0));
+        groups.add(getGroup(5));
+        groups.add(getGroup(10));
+        List<Long> ids = operationHelper.insertList(groups, null);
 
-        Assert.assertEquals(3, ids.size());
+        for (int i = 0; i < ids.size(); i++) {
+            Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
+        }
+
+        Cursor cursor = manager.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(3, cursor.getCount());
+
+        cursor = manager.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(9, cursor.getCount());
     }
 
     @Test
-    public <T> void shouldFetchNestedList() {
-        //tableHelper.createTableFrom(PersonGroup.class);
+    public <T> void shouldFetchAll() {
+        tableHelper.createTables();
         List<PersonGroup> groups = new ArrayList<>();
-        groups.add(getGroup());
-        groups.add(getGroup());
-        groups.add(getGroup());
-        List<Long> ids = operationHelper.insertList(groups);
-        Assert.assertEquals(3, ids.size());
+        groups.add(getGroup(0));
+        groups.add(getGroup(5));
+        groups.add(getGroup(10));
+        List<Long> ids = operationHelper.insertList(groups, null);
 
-        HashMap<String, Object> mapNestedObjects = new HashMap<>();
-        for (Field field : ObjectHelper.getDeclaredFields(PersonGroup.class)) {
-            if (ObjectHelper.isAList(field)) {
-                Class<T> listType = ObjectHelper.getActualListType(field);
-                List<T> list = operationHelper.fetchNestedList(PersonGroup.class, listType, 1);
-                mapNestedObjects.put(field.getName(), list);
-            }
+        for (int i = 0; i < ids.size(); i++) {
+            Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
         }
-        Assert.assertEquals(3, mapNestedObjects.size());
+
+        Cursor cursor = manager.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(3, cursor.getCount());
+
+        cursor = manager.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(9, cursor.getCount());
+
+        List<PersonGroup> fetched = operationHelper.fetchAll(PersonGroup.class, null);
+        Assert.assertEquals(3, fetched.size());
     }
 
-    private PersonGroup getGroup() {
-        Person chef = new Person("idchef", "chef", 50, true);
+    private PersonGroup getGroup(int i) {
+        Person chef = new Person("idchef" + i, "chef" + i, 50, true);
         List<Person> members = new ArrayList<>();
         members.add(new Person("member" + i, "member" + i, 23, true));
         members.add(new Person("member" + (i+1), "member"  + (i+1), 23, true));
@@ -147,7 +153,6 @@ public class OperationHelperTest {
         codes.add(5678);
 
         PersonGroup group = new PersonGroup("group" + i, "group" + i, chef, members, departments, codes);
-        i++;
         return group;
     }
 

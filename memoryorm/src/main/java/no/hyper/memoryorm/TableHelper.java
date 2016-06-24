@@ -37,23 +37,22 @@ public class TableHelper {
         StringBuilder content = new StringBuilder();
         content.append("(");
         for (Column column : table.getColumns()) {
-            content.append(column.getLabel());
             if (!column.isList() && ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+                content.append(column.getLabel());
                 createTable(SchemaHelper.getInstance().getTable(column.getType()));
-                if (column.isForeignKey()) {
-                    content.append(" integer");
-                }
-            } else if (column.isList()) {
-                content.append(" text");
-            } else {
+                content.append(" integer,");
+            } else if (column.isList() && !ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+                content.append(column.getLabel());
+                content.append(" text,");
+            } else if (!column.isList() && !ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+                content.append(column.getLabel());
                 content.append(" ");
                 content.append(column.getType());
+                if (column.isPrimary()) {
+                    content.append(" primary key");
+                }
+                content.append(",");
             }
-
-            if (column.isPrimary()) {
-                content.append(" primary key");
-            }
-            content.append(",");
         }
         content.deleteCharAt(content.length() - 1);
         content.append(")");

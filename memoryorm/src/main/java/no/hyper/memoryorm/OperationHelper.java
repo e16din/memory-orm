@@ -8,6 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import no.hyper.memoryorm.model.Column;
 import no.hyper.memoryorm.model.Table;
@@ -27,49 +28,45 @@ public class OperationHelper {
      * save an object in the corresponding table. If the object has nested object/list of object, they will be save in
      * their corresponding table.
      * @param entity: the object to save
+     * @param foreignKeys: an hash map of foreign keys. The key represent the name of the column, the value is the id
      * @return the id of the row for the object inserted
      */
-    public <T> long insert(T entity) {
+    public <T, U> long insert(T entity, HashMap<String, Long> foreignKeys) {
         long rowId = -1;
         List<Column> nestedLists = ObjectHelper.getCustomListColumns(entity.getClass().getSimpleName());
         List<Column> nestedObjects = ObjectHelper.getNestedObjects(entity.getClass().getSimpleName());
         ContentValues entityValues = ObjectHelper.getEntityContentValues(entity);
 
-        if (nestedObjects.size() > 0) {
-            for(Column column : nestedObjects) {
-                try {
-                    Field field = entity.getClass().getField(column.getLabel());
-                    field.setAccessible(true);
-                    Object actualObject = field.get(entity);
-                    ContentValues nestedValues = ObjectHelper.getEntityContentValues(actualObject);
+        if (foreignKeys != null) {
+            for(Map.Entry<String, Long> key : foreignKeys.entrySet()) {
+                entityValues.put(key.getKey(), key.getValue());
+            }
+        }
 
-                    if (ObjectHelper.isCustomType(column.getType())) {
-                        long id = insert(actualObject);
-                        nestedValues.put("id_" + entity.getClass().getSimpleName(), rowId);
-                    }
-
-                    long nestedObjectId = insert(actualObject);
-                    entityValues.put(column.getLabel(), nestedObjectId);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        for(Column column : nestedObjects) {
+            try {
+                Field field = entity.getClass().getDeclaredField(column.getLabel());
+                field.setAccessible(true);
+                Object actualObject = field.get(entity);
+                long id = insert(actualObject, null);
+                entityValues.put(column.getLabel(), id);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
         rowId = db.insert(entity.getClass().getSimpleName(), entityValues);
 
-        if (nestedLists.size() > 0) {
-            for(Column column : nestedLists) {
-                try {
-                    Field field = entity.getClass().getField(column.getLabel());
-                    field.setAccessible(true);
-                    Object actualObject = field.get(entity);
-                    ContentValues nestedValues = ObjectHelper.getEntityContentValues(actualObject);
-                    nestedValues.put("id_" + entity.getClass().getSimpleName(), rowId);
-                    insert(actualObject);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        for(Column column : nestedLists) {
+            try {
+                Field field = entity.getClass().getDeclaredField(column.getLabel());
+                field.setAccessible(true);
+                Object actualObject = field.get(entity);
+                HashMap<String, Long> foreignKey = new HashMap<>();
+                foreignKey.put("id_" + entity.getClass().getSimpleName(), rowId);
+                insertList((List<U>)actualObject, foreignKey);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
@@ -81,22 +78,22 @@ public class OperationHelper {
      * @param list: list of object to save
      * @return the list of rows id
      */
-    public <T> List<Long> insertList(List<T> list) {
+    public <T> List<Long> insertList(List<T> list, HashMap<String, Long> foreignKeys) {
         if (list.size() <= 0) return null;
         List<Long> rows = new ArrayList<>();
         for(T entity : list) {
-            rows.add(insert(entity));
+            rows.add(insert(entity, foreignKeys));
         }
         return rows;
     }
 
     /**
-     *
-     * @param classType
-     * @param condition
+     * fetch all the row of the table
+     * @param classType: the class corresponding to the table where rows should be fetched
+     * @param condition: WHERE condition, example: "id=3". Can be null
      * @return
      */
-    public <T> List<T> fetchAll(Class<T> classType, String condition) {
+    public <T, U> List<T> fetchAll(Class<T> classType, String condition) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName(), condition));
         if (cursor == null || cursor.getCount() <= 0) return null;
 
@@ -105,6 +102,42 @@ public class OperationHelper {
         List<T> entities = new ArrayList<>();
 
         do {
+            T entity = EntityBuilder.bindCursorToEntity(classType, cursor);
+
+            List<Column> nestedLists = ObjectHelper.getCustomListColumns(entity.getClass().getSimpleName());
+            List<Column> nestedObjects = ObjectHelper.getNestedObjects(entity.getClass().getSimpleName());
+
+            for (Column column : nestedLists) {
+                try {
+                    List<U> list = (List<U>)fetchAll(Class.forName("com.package.MyClass"), null);
+                    Field field = entity.getClass().getDeclaredField(column.getLabel());
+                    field.setAccessible(true);
+                    field.set(entity, list);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            for (Column column : nestedObjects) {
+                try {
+                    U object = (U)fetchAll(Class.forName("com.package.MyClass"), null);
+                    Field field = entity.getClass().getDeclaredField(column.getLabel());
+                    field.setAccessible(true);
+                    field.set(entity, list);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            entities.add(entity);
             //HashMap<String, Object> nestedObject = getNestedObjects(classType, cursor);
             //entities.add(EntityBuilder.cursorToEntity(classType, cursor, nestedObject));
             next = cursor.moveToNext();
@@ -164,7 +197,7 @@ public class OperationHelper {
         if (cursor != null && cursor.getCount() > 0) {
             return update(entity, id);
         } else {
-            return insert(entity);
+            return insert(entity, null);
         }
     }
 

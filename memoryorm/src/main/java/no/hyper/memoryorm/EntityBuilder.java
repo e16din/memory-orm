@@ -8,6 +8,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import no.hyper.memoryorm.model.Column;
+import no.hyper.memoryorm.model.Table;
+
 /**
  * Created by Jean on 5/15/2016.
  */
@@ -49,6 +52,7 @@ public class EntityBuilder {
                 e.printStackTrace();
             }
         }
+
         return entity;
     }
 
@@ -59,19 +63,19 @@ public class EntityBuilder {
      */
     public static <T> HashMap<String, Object> bindCursorToHashMap(Class<T> classType, Cursor cursor) {
         HashMap<String, Object> map = new HashMap<>();
-        for (Field field : ObjectHelper.getDeclaredFields(classType)) {
-            String fieldName = field.getName();
-            int index = cursor.getColumnIndex(fieldName);
+        Table table = SchemaHelper.getInstance().getTable(classType.getSimpleName());
+
+        for (Column column : table.getColumns()) {
+            int index = cursor.getColumnIndex(column.getLabel());
             if (index >= 0) {
-                switch (field.getType().getSimpleName()) {
-                    case "int":
-                    case "Integer": map.put(fieldName, cursor.getInt(index)); break;
-                    case "boolean": map.put(fieldName, cursor.getInt(index) == 1); break;
-                    case "String" : map.put(fieldName, cursor.getString(index)); break;
+                switch (column.getType()) {
+                    case "integer": map.put(column.getLabel(), cursor.getInt(index)); break;
+                    case "text" : map.put(column.getLabel(), cursor.getString(index)); break;
                     default: break;
                 }
             }
         }
+
         return map;
     }
 

@@ -54,11 +54,11 @@ public class ObjectHelper {
      * return a list of field for which the type is List
      * @param tableName: the class containing the attibutes to test
      */
-    public static <T> List<Column> getCustomListColumns(String tableName) {
+    public static List<Column> getCustomListColumns(String tableName) {
         Table table = SchemaHelper.getInstance().getTable(tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
-            if (column.isList() && !isCustomType(column.getLabel())) {
+            if (column.isList() && isCustomType(getEquivalentJavaType(column.getType()))) {
                 columns.add(column);
             }
         }
@@ -69,11 +69,11 @@ public class ObjectHelper {
      * return a list of field that have a custom type
      * @param tableName: the class containing the attibutes to test
      */
-    public static <T> List<Column> getNestedObjects(String tableName) {
+    public static List<Column> getNestedObjects(String tableName) {
         Table table = SchemaHelper.getInstance().getTable(tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
-            if (!column.isList() && isCustomType(column.getLabel())) {
+            if (!column.isList() && isCustomType(getEquivalentJavaType(column.getType()))) {
                 columns.add(column);
             }
         }
@@ -99,7 +99,7 @@ public class ObjectHelper {
         switch (sqlType) {
             case "integer" : return "Integer";
             case "text" : return "String";
-            default : return  "";
+            default : return  sqlType;
         }
     }
 
@@ -146,10 +146,10 @@ public class ObjectHelper {
         ContentValues values = new ContentValues();
         for(Column column : table.getColumns()) {
             try {
-                Field field = c.getField(column.getLabel());
+                Field field = c.getDeclaredField(column.getLabel());
                 field.setAccessible(true);
                 Object value = field.get(entity);
-                if (value == null || isCustomType(column.getType())) {
+                if (value == null || isCustomType(getEquivalentJavaType(column.getType()))) {
                     continue;
                 } else if(column.isList()) {
                     List<U> list = (List<U>)value;
