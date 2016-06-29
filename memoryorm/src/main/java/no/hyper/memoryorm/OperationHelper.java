@@ -5,6 +5,7 @@ import android.database.Cursor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,42 +105,30 @@ public class OperationHelper {
         do {
             T entity = EntityBuilder.bindCursorToEntity(classType, cursor);
 
-            List<Column> nestedLists = ObjectHelper.getCustomListColumns(entity.getClass().getSimpleName());
-            List<Column> nestedObjects = ObjectHelper.getNestedObjects(entity.getClass().getSimpleName());
-
-            for (Column column : nestedLists) {
-                try {
-                    List<U> list = (List<U>)fetchAll(Class.forName("com.package.MyClass"), null);
-                    Field field = entity.getClass().getDeclaredField(column.getLabel());
-                    field.setAccessible(true);
-                    field.set(entity, list);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            for (Column column : nestedObjects) {
-                try {
-                    U object = (U)fetchAll(Class.forName("com.package.MyClass"), null);
-                    Field field = entity.getClass().getDeclaredField(column.getLabel());
-                    field.setAccessible(true);
-                    field.set(entity, list);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+            for (Field field : ObjectHelper.getDeclaredFields(classType)) {
+                field.setAccessible(true);
+                Type listType = ObjectHelper.getActualListType(field);
+                if (ObjectHelper.isAList(field) && ObjectHelper.isCustomType(listType.getClass().getSimpleName())) {
+                    try {
+                        List<U> list = (List<U>)fetchAll(field.getClass(), null);
+                        field.setAccessible(true);
+                        field.set(entity, list);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                } else if (!ObjectHelper.isAList(field) &&
+                        ObjectHelper.isCustomType(field.getClass().getSimpleName())) {
+                    try {
+                        U object = (U)fetchAll(field.getClass(), null);
+                        field.setAccessible(true);
+                        field.set(entity, object);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
             entities.add(entity);
-            //HashMap<String, Object> nestedObject = getNestedObjects(classType, cursor);
-            //entities.add(EntityBuilder.cursorToEntity(classType, cursor, nestedObject));
             next = cursor.moveToNext();
         } while (next);
         cursor.close();

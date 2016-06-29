@@ -5,7 +5,9 @@ import android.database.Cursor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import no.hyper.memoryorm.model.Column;
@@ -68,10 +70,27 @@ public class EntityBuilder {
         for (Column column : table.getColumns()) {
             int index = cursor.getColumnIndex(column.getLabel());
             if (index >= 0) {
-                switch (column.getType()) {
-                    case "integer": map.put(column.getLabel(), cursor.getInt(index)); break;
-                    case "text" : map.put(column.getLabel(), cursor.getString(index)); break;
-                    default: break;
+                if (column.isList()) {
+                    String stringList = cursor.getString(index);
+                    String[] array = stringList.split(";");
+                    if (column.getType().equals("integer")) {
+                        List<Integer> list = new ArrayList<>();
+                        for(String item : array) {
+                            list.add(Integer.valueOf(item));
+                        }
+                        map.put(column.getLabel(), list);
+                    } else if (column.getType().equals("text")) {
+                        List<String> list = new ArrayList<>();
+                        for(String item : array) {
+                            list.add(item);
+                        }
+                        map.put(column.getLabel(), list);
+                    }
+
+                } else if (column.getType().equals("text")) {
+                    map.put(column.getLabel(), cursor.getString(index));
+                } else if (column.getType().equals("integer")) {
+                    map.put(column.getLabel(), cursor.getInt(index));
                 }
             }
         }

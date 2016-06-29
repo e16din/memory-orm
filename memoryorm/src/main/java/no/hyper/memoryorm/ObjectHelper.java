@@ -155,7 +155,7 @@ public class ObjectHelper {
                     List<U> list = (List<U>)value;
                     StringBuilder builder = new StringBuilder();
                     for (U item : list) {
-                        builder.append(item + "|");
+                        builder.append(item + ";");
                     }
                     builder.deleteCharAt(builder.length() - 1);
                     values.put(column.getLabel(), builder.toString());
