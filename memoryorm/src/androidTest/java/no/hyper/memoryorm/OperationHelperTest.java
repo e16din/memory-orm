@@ -118,7 +118,7 @@ public class OperationHelperTest {
     }
 
     @Test
-    public <T> void shouldFetchAll() {
+    public void shouldFetchAll() {
         tableHelper.createTables();
         List<PersonGroup> groups = new ArrayList<>();
         groups.add(getGroup(0));

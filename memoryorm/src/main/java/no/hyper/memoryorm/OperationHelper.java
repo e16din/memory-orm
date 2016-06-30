@@ -103,31 +103,7 @@ public class OperationHelper {
         List<T> entities = new ArrayList<>();
 
         do {
-            T entity = EntityBuilder.bindCursorToEntity(classType, cursor);
-
-            for (Field field : ObjectHelper.getDeclaredFields(classType)) {
-                field.setAccessible(true);
-                Type listType = ObjectHelper.getActualListType(field);
-                if (ObjectHelper.isAList(field) && ObjectHelper.isCustomType(listType.getClass().getSimpleName())) {
-                    try {
-                        List<U> list = (List<U>)fetchAll(field.getClass(), null);
-                        field.setAccessible(true);
-                        field.set(entity, list);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                } else if (!ObjectHelper.isAList(field) &&
-                        ObjectHelper.isCustomType(field.getClass().getSimpleName())) {
-                    try {
-                        U object = (U)fetchAll(field.getClass(), null);
-                        field.setAccessible(true);
-                        field.set(entity, object);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
+            T entity = getEntityEntity(classType, cursor);
             entities.add(entity);
             next = cursor.moveToNext();
         } while (next);
@@ -135,12 +111,11 @@ public class OperationHelper {
         return entities;
     }
 
-    public <T> T fetchFirst(Class<T> classType) {
+    public <T, U> T fetchFirst(Class<T> classType, String condition) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName(), null));
         if (cursor == null || cursor.getCount() <= 0) return null;
-
         cursor.moveToFirst();
-        T entity = null;//EntityBuilder.cursorToEntity(classType, cursor, getNestedObjects(classType, cursor));
+        T entity = getEntityEntity(classType, cursor);
         cursor.close();
         return entity;
     }
@@ -213,46 +188,6 @@ public class OperationHelper {
         return id;
     }
 
-    private <T, U> void insertInRelationTable(T entity, long rowId, Field field) {
-        try {
-            field.setAccessible(true);
-            List<U> items = (List<U>)field.get(entity);
-            if (items == null) return;
-            for(U item : items) {
-                ContentValues values = ObjectHelper.getEntityContentValues(item);
-                values.put("id_" + entity.getClass().getSimpleName(), rowId);
-                db.insert(item.getClass().getSimpleName(), values);
-            }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    /**
-     * return a the list of objects save in db corresponding to the list attribute.
-     * @param classType: the class containing the list attribute
-     * @param listType: the parametrized type of the list
-     * @param rowid: the row id in db of the object containing the list
-     */
-    public <T, U> List<U> fetchNestedList(Class<T> classType, Class<U> listType, long rowid) {
-        String condition = "rowId_" + classType.getSimpleName() + " = " + rowid;
-        List<U> items = fetchAll(listType, condition);
-
-        return items;
-    }
-
-    private <T> Class<T> getActualListType(Field list) {
-        ParameterizedType listType = (ParameterizedType) list.getGenericType();
-        return (Class<T>) listType.getActualTypeArguments()[0];
-    }
-
-    private Object fetchNestedObject(Field field, Cursor cursor) {
-        int index = cursor.getColumnIndex(field.getName());
-        long id = cursor.getLong(index);
-        return fetchByRowId(field.getType(), id);
-    }
-
     private String getFetchAllRequest(String table, String condition) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ROWID, * FROM ");
@@ -273,17 +208,34 @@ public class OperationHelper {
         return "SELECT ROWID, * FROM " + name + " WHERE ROWID='" + rowId + "';";
     }
 
-    private boolean isCustomType(Field field) {
-        try {
-            if (field.getType().isPrimitive()) {
-                return false;
+    private <T, U> T getEntityEntity(Class<T> classType, Cursor cursor) {
+        T entity = EntityBuilder.bindCursorToEntity(classType, cursor);
+        for (Field field : ObjectHelper.getDeclaredFields(classType)) {
+            if (ObjectHelper.isAList(field)) {
+                Type listType = ObjectHelper.getActualListType(field);
+                if (ObjectHelper.isCustomType(listType.getClass().getSimpleName())) {
+                    try {
+                        List<U> list = (List<U>)fetchAll(field.getClass(), null);
+                        field.setAccessible(true);
+                        field.set(entity, list);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else if (!ObjectHelper.isAList(field) &&
+                    ObjectHelper.isCustomType(field.getType().getSimpleName())) {
+                try {
+                    int idx = cursor.getColumnIndex(field.getName());
+                    long rowId = cursor.getLong(idx);
+                    U object = (U)fetchFirst(field.getType(), "ROWID="+rowId);
+                    field.setAccessible(true);
+                    field.set(entity, object);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
             }
-            Class.forName("java.lang." + field.getType().getSimpleName());
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return true;
         }
+        return entity;
     }
 
 }

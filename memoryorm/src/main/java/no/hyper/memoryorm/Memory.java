@@ -58,7 +58,7 @@ public class Memory {
 
     public <T> T fetchFirst(Class<T> entityToFetch) {
         db.openDb();
-        T entity = operationHelper.fetchFirst(entityToFetch);
+        T entity = operationHelper.fetchFirst(entityToFetch, null);
         db.closeDb();
         return entity;
     }

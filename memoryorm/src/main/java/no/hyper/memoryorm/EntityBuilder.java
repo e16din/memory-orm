@@ -49,7 +49,11 @@ public class EntityBuilder {
                 Object value = values.get(field.getName());
                 field.setAccessible(true);
                 if (value == null) continue;
-                field.set(entity, value);
+                if (field.getType().getSimpleName().equals("boolean")) {
+                    field.set(entity, value.equals(1));
+                } else {
+                    field.set(entity, value);
+                }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -86,7 +90,6 @@ public class EntityBuilder {
                         }
                         map.put(column.getLabel(), list);
                     }
-
                 } else if (column.getType().equals("text")) {
                     map.put(column.getLabel(), cursor.getString(index));
                 } else if (column.getType().equals("integer")) {

@@ -35,6 +35,7 @@ public class ObjectHelper {
      */
     public static <T> boolean isCustomType(String classname) {
         try {
+            if (classname.equals("boolean") || classname.equals("int")) return false;
             Class c = Class.forName("java.lang." + classname);
             if (c.isPrimitive() || c != null) return false;
             else return true;
