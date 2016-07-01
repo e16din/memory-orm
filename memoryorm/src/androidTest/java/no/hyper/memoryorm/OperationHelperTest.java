@@ -4,20 +4,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.test.InstrumentationRegistry;
 
-import com.google.gson.Gson;
-
 import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
-import no.hyper.memoryorm.model.Database;
 
 /**
  * Created by jean on 13.06.2016.
@@ -69,7 +63,7 @@ public class OperationHelperTest {
     }
 
     @Before
-    public void start() {
+    public void start() throws Exception {
         context = InstrumentationRegistry.getContext();
         manager = new DbManager(context, DB_NAME, null, 1);
         tableHelper = new TableHelper(manager);
@@ -78,15 +72,16 @@ public class OperationHelperTest {
     }
 
     @After
-    public void finish() {
+    public void finish() throws Exception {
         manager.closeDb();
         context.deleteDatabase(DB_NAME);
     }
 
     @Test
-    public void shouldInsert() {
+    public void shouldInsert() throws Exception {
         tableHelper.createTables();
-        long id = operationHelper.insert(getGroup(0), null);
+        List<PersonGroup> groups = getGroups();
+        long id = operationHelper.insert(groups.get(0), null);
 
         Assert.assertEquals(1, id);
 
@@ -98,13 +93,10 @@ public class OperationHelperTest {
     }
 
     @Test
-    public void shouldInsertList() {
+    public void shouldInsertList() throws Exception {
         tableHelper.createTables();
-        List<PersonGroup> groups = new ArrayList<>();
-        groups.add(getGroup(0));
-        groups.add(getGroup(5));
-        groups.add(getGroup(10));
-        List<Long> ids = operationHelper.insertList(groups, null);
+        List<PersonGroup> groups = getGroups();
+        List<Long> ids = operationHelper.insert(groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
@@ -118,13 +110,10 @@ public class OperationHelperTest {
     }
 
     @Test
-    public void shouldFetchAll() {
+    public void shouldFetchAll() throws Exception {
         tableHelper.createTables();
-        List<PersonGroup> groups = new ArrayList<>();
-        groups.add(getGroup(0));
-        groups.add(getGroup(5));
-        groups.add(getGroup(10));
-        List<Long> ids = operationHelper.insertList(groups, null);
+        List<PersonGroup> groups = getGroups();
+        List<Long> ids = operationHelper.insert(groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
@@ -140,20 +129,119 @@ public class OperationHelperTest {
         Assert.assertEquals(3, fetched.size());
     }
 
-    private PersonGroup getGroup(int i) {
-        Person chef = new Person("idchef" + i, "chef" + i, 50, true);
-        List<Person> members = new ArrayList<>();
-        members.add(new Person("member" + i, "member" + i, 23, true));
-        members.add(new Person("member" + (i+1), "member"  + (i+1), 23, true));
-        List<String> departments = new ArrayList<>();
-        departments.add("dep" + i);
-        departments.add("dep" + (i+1));
-        List<Integer> codes = new ArrayList<>();
-        codes.add(1234);
-        codes.add(5678);
+    @Test
+    public void shouldFetchById() throws Exception {
+        tableHelper.createTables();
+        List<PersonGroup> groups = getGroups();
+        List<Long> ids = operationHelper.insert(groups, null);
 
-        PersonGroup group = new PersonGroup("group" + i, "group" + i, chef, members, departments, codes);
-        return group;
+        for (int i = 0; i < ids.size(); i++) {
+            Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
+        }
+
+        PersonGroup group = operationHelper.fetchById(PersonGroup.class, "group1");
+        Assert.assertEquals("group1", group.id);
+    }
+
+    @Test
+    public void shouldFetchByRowId() throws Exception {
+        tableHelper.createTables();
+        List<PersonGroup> groups = getGroups();
+        List<Long> ids = operationHelper.insert(groups, null);
+
+        for (int i = 0; i < ids.size(); i++) {
+            Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
+        }
+
+        PersonGroup group = operationHelper.fetchByRowId(PersonGroup.class, (long)1);
+        Assert.assertEquals("group0", group.id);
+    }
+
+    @Test
+    public void shouldUpdate() throws Exception {
+        tableHelper.createTables();
+        List<PersonGroup> groups = getGroups();
+        List<Long> ids = operationHelper.insert(groups, null);
+
+        for (int i = 0; i < ids.size(); i++) {
+            Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
+        }
+
+        PersonGroup group = operationHelper.fetchById(PersonGroup.class, "group1");
+        Assert.assertEquals("group1", group.id);
+
+        group.name = "test";
+        boolean worked = operationHelper.update(group);
+
+        Assert.assertEquals(true, worked);
+
+        groups = operationHelper.fetchAll(PersonGroup.class, "name='test'");
+        Assert.assertEquals(1, groups.size());
+    }
+
+    @Test
+    public void shouldSaveOrUpdate() throws Exception {
+        tableHelper.createTables();
+        List<PersonGroup> groups = getGroups();
+        List<Long> ids = operationHelper.saveOrUpdate(groups);
+
+        for (int i = 0; i < ids.size(); i++) {
+            Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
+        }
+
+        PersonGroup group = operationHelper.fetchById(PersonGroup.class, "group1");
+        Assert.assertEquals("group1", group.id);
+
+        group.name = "test";
+        long worked = operationHelper.saveOrUpdate(group);
+
+        Assert.assertEquals(0, worked);
+
+        groups = operationHelper.fetchAll(PersonGroup.class, "name='test'");
+        Assert.assertEquals(1, groups.size());
+    }
+
+    private List<PersonGroup> getGroups() {
+        Person chef0 = new Person("idchef0", "chef0", 50, true);
+        Person chef1 = new Person("idchef1", "chef1", 51, true);
+        Person chef2 = new Person("idchef2", "chef2", 52, true);
+
+        List<Person> members0 = new ArrayList<>();
+        members0.add(new Person("member0", "member0", 23, true));
+        members0.add(new Person("member1", "member1", 23, true));
+        List<Person> members1 = new ArrayList<>();
+        members1.add(new Person("member2", "member2", 23, true));
+        members1.add(new Person("member3", "member3", 23, true));
+        List<Person> members2 = new ArrayList<>();
+        members2.add(new Person("membe4r", "member4", 23, true));
+        members2.add(new Person("member5", "member5", 23, true));
+
+        List<String> departments0 = new ArrayList<>();
+        departments0.add("dep0");
+        departments0.add("dep1");
+        List<String> departments1 = new ArrayList<>();
+        departments1.add("dep2");
+        departments1.add("dep3");
+        List<String> departments2 = new ArrayList<>();
+        departments2.add("dep4");
+        departments2.add("dep5");
+
+        List<Integer> codes0 = new ArrayList<>();
+        codes0.add(12);
+        codes0.add(34);
+        List<Integer> codes1 = new ArrayList<>();
+        codes1.add(56);
+        codes1.add(78);
+        List<Integer> codes2 = new ArrayList<>();
+        codes2.add(91);
+        codes2.add(23);
+
+        List<PersonGroup> groups = new ArrayList<>();
+        groups.add(new PersonGroup("group0", "group0", chef0, members0, departments0, codes0));
+        groups.add(new PersonGroup("group1", "group1", chef1, members1, departments1, codes1));
+        groups.add(new PersonGroup("group2", "group2", chef2, members2, departments2, codes2));
+
+        return groups;
     }
 
 }

@@ -44,7 +44,7 @@ public class Memory {
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
         db.openDb();
-        List<Long> rows = operationHelper.insertList(list, null);
+        List<Long> rows = operationHelper.insert(list, null);
         db.closeDb();
         return rows;
     }
@@ -70,16 +70,16 @@ public class Memory {
         return result;
     }
 
-    public <T> long update(T entity) {
+    public <T> boolean update(T entity) {
         db.openDb();
-        long result = operationHelper.update(entity);
+        boolean result = operationHelper.update(entity);
         db.closeDb();
         return result;
     }
 
-    public <T> List<Long> update(List<T> list) {
+    public <T> List<Boolean> update(List<T> list) {
         db.openDb();
-        List<Long> ids = new ArrayList<>();
+        List<Boolean> ids = new ArrayList<>();
         for(T entity : list) {
             ids.add(operationHelper.update(entity));
         }
