@@ -113,7 +113,7 @@ public class TableHelperTest {
         Cursor cursor = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(1, cursor.getCount());
 
-        tableHelper.emptyTables();
+        tableHelper.cleanTables();
         Cursor cursor2 = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(0, cursor2.getCount());
     }

@@ -22,18 +22,29 @@ public class Memory {
         operationHelper = new OperationHelper(db);
     }
 
-    public <T> void createTableFrom(Class<T> classType) {
+    /**
+     * create the database
+     */
+    public void createTables() {
         db.openDb();
-        //tableHelper.createTableFrom(classType);
+        tableHelper.createTables();
         db.closeDb();
     }
 
-    public <T> void deleteTable(Class<T> classType) {
+    /**
+     * delete every row from all the tables
+     */
+    public void cleanTables() {
         db.openDb();
-        //tableHelper.deleteTable(classType);
+        tableHelper.cleanTables();
         db.closeDb();
     }
 
+    /**
+     * save an object in its corresponding table
+     * @param entity the object to save
+     * @return
+     */
     public <T> long save(T entity) {
         db.openDb();
         long result = operationHelper.insert(entity, null);
@@ -41,6 +52,12 @@ public class Memory {
         return result;
     }
 
+    /**
+     * save a list of object in their corresponding database
+     * @param list
+     * @param <T>
+     * @return
+     */
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
         db.openDb();
@@ -104,12 +121,6 @@ public class Memory {
         return ids;
     }
 
-    public <T> void emptyTable(Class<T> classType) {
-        db.openDb();
-        //tableHelper.emptyTable(classType);
-        db.closeDb();
-    }
-
     public void openDb() {
         this.db.openDb();
     }
@@ -118,8 +129,14 @@ public class Memory {
         this.db.closeDb();
     }
 
-    public Cursor rawQuery(String request, String[] args) {
-        return db.rawQuery(request, args);
+    /**
+     * execute a raw query in the database. You need to open the database first by using `openDb`
+     * @param query the query to execute
+     * @param args the args to pass that will replace the `?` inside your query
+     * @return a cursor containing the result of the query
+     */
+    public Cursor rawQuery(String query, String[] args) {
+        return db.rawQuery(query, args);
     }
 
 }

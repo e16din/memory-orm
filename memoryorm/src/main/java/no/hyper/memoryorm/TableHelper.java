@@ -80,18 +80,20 @@ public class TableHelper {
     /**
      * delete every row of every tables represented by the Database Object
      */
-    public void emptyTables() {
+    public void cleanTables() {
         for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
-            emptyTable(table);
+            cleanTable(table.getName(), null);
         }
     }
 
     /**
-     * delete every row of the table represented by the object passed as parameter
+     * delete one, several or all the rows in a table
+     * @param tableName the name of the table where the delete must be done
+     * @param clause a where clause to limit the effect of the command
+     * @return a int representing the number of rows affected by the operation
      */
-    public void emptyTable(Table table) {
-        String request = "DELEtE FROM " + table.getName();
-        db.execute(request);
+    public int cleanTable(String tableName, String clause) {
+        return db.delete(tableName, clause);
     }
 
 }

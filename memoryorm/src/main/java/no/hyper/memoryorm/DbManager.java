@@ -66,5 +66,9 @@ public class DbManager extends SQLiteOpenHelper {
         return db.update(tableName, values, "id='" + id + "'", null);
     }
 
+    public int delete(String tableName, String clause) {
+        return db.delete(tableName, clause, null);
+    }
+
 }
 

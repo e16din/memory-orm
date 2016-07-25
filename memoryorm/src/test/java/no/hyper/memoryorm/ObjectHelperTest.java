@@ -1,14 +1,13 @@
 package no.hyper.memoryorm;
 
+import android.content.Context;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
-
-import no.hyper.memoryorm.model.Column;
 
 /**
  * Created by jean on 01.06.2016.
@@ -37,7 +36,7 @@ public class ObjectHelperTest {
     @Test
     public void shouldGetDeclaredFields() {
         assertNumberOfFields(4, ObjectHelper.getDeclaredFields(Person.class));
-        assertNumberOfFields(4, ObjectHelper.getDeclaredFields(Group.class));
+        assertNumberOfFields(5, ObjectHelper.getDeclaredFields(Group.class));
     }
 
     @Test
@@ -49,7 +48,8 @@ public class ObjectHelperTest {
 
         List<Field> fieldsGroup = ObjectHelper.getDeclaredFields(Group.class);
         for (Field field : fieldsGroup) {
-            if (field.getName().equals("chef") || field.getName().equals("members")) {
+            if (field.getName().equals("chef") || field.getName().equals("members")
+                    || field.getName().equals("departments")) {
                 Assert.assertTrue(ObjectHelper.isCustomType(field.getType().getSimpleName()));
             } else {
                 Assert.assertFalse(ObjectHelper.isCustomType(field.getType().getSimpleName()));
@@ -101,21 +101,10 @@ public class ObjectHelperTest {
     public void shouldGetActualListType() {
         for(Field field : ObjectHelper.getDeclaredFields(Group.class)) {
             if (ObjectHelper.isAList(field)) {
-                Assert.assertEquals(Person.class, ObjectHelper.getActualListType(field));
+                Assert.assertTrue(ObjectHelper.getActualListType(field).getSimpleName().equals(Person.class.getSimpleName())
+                        || ObjectHelper.getActualListType(field).getSimpleName().equals(String.class.getSimpleName()));
             }
         }
-    }
-
-    @Test
-    public void shouldReturnListFields() {
-        List<Column> fields = ObjectHelper.getCustomListColumns(Group.class.getSimpleName());
-        Assert.assertTrue(fields.size() == 2);
-    }
-
-    @Test
-    public void shouldReturnCustomFields() {
-        List<Column> fields = ObjectHelper.getNestedObjects(Group.class.getSimpleName());
-        Assert.assertTrue(fields.size() == 1);
     }
 
     private void assertNumberOfFields(int number, List<Field> fields) {

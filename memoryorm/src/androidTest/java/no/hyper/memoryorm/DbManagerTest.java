@@ -20,7 +20,6 @@ import org.junit.runner.RunWith;
  * Created by Jean on 5/29/2016.
  */
 
-@RunWith(AndroidJUnit4.class)
 public class DbManagerTest {
 
     private static final String DB_NAME = "DbTest";
