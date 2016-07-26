@@ -40,7 +40,7 @@ ext {
     artifact = 'memoryorm'
 
     libraryDescription = 'This library is an ORM for android developed in Java with kotlin usage in mind'
-    libraryVersion = '0.1.10'
+    libraryVersion = '0.2.0'
 
     developerId = 'jeantuffier'
     developerName = 'Jean Tuffier'
