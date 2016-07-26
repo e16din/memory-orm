@@ -23,6 +23,7 @@ import no.hyper.memoryorm.model.Database;
 public class TableHelperTest {
 
     private static final String DB_NAME = "DbTest";
+    private static final String JSON_DB = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"},{\"label\":\"id_PersonGroup\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"members\",\"list\":true,\"type\":\"Person\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
 
     private static Context context;
     private static DbManager manager;
@@ -69,7 +70,7 @@ public class TableHelperTest {
     public void start() {
         context = InstrumentationRegistry.getContext();
         manager = new DbManager(context, DB_NAME, null, 1);
-        tableHelper = new TableHelper(manager);
+        tableHelper = new TableHelper(manager, JSON_DB);
         manager.openDb();
     }
 

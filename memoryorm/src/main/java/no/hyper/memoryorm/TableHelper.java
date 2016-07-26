@@ -1,13 +1,6 @@
 package no.hyper.memoryorm;
 
-import com.google.gson.Gson;
-
-import org.json.JSONException;
-import java.lang.reflect.Field;
-import java.util.List;
-
 import no.hyper.memoryorm.model.Column;
-import no.hyper.memoryorm.model.Database;
 import no.hyper.memoryorm.model.Table;
 
 /**
@@ -16,16 +9,18 @@ import no.hyper.memoryorm.model.Table;
 public class TableHelper {
 
     private DbManager db;
+    private String jsonDb;
 
-    public TableHelper(DbManager db) {
+    public TableHelper(DbManager db, String jsonDb) {
         this.db = db;
+        this.jsonDb = jsonDb;
     }
 
     /**
      * create every table contained in the Database object
      */
     public void createTables() {
-        for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
+        for (Table table : SchemaHelper.getInstance().getDatabase(jsonDb).getTables()) {
             createTable(table);
         }
     }
@@ -39,7 +34,7 @@ public class TableHelper {
         for (Column column : table.getColumns()) {
             if (!column.isList() && ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
                 content.append(column.getLabel());
-                createTable(SchemaHelper.getInstance().getTable(column.getType()));
+                createTable(SchemaHelper.getInstance().getTable(jsonDb, column.getType()));
                 content.append(" integer,");
             } else if (column.isList() && !ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
                 content.append(column.getLabel());
@@ -64,7 +59,7 @@ public class TableHelper {
      * delete all the table represented by the Database object
      */
     public void deleteTables() {
-        for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
+        for (Table table : SchemaHelper.getInstance().getDatabase(jsonDb).getTables()) {
             deleteTable(table);
         }
     }
@@ -81,7 +76,7 @@ public class TableHelper {
      * delete every row of every tables represented by the Database Object
      */
     public void cleanTables() {
-        for (Table table : SchemaHelper.getInstance().getDatabase().getTables()) {
+        for (Table table : SchemaHelper.getInstance().getDatabase(jsonDb).getTables()) {
             cleanTable(table.getName(), null);
         }
     }

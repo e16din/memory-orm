@@ -30,11 +30,11 @@ public class OperationHelper {
      * @param foreignKeys: an hash map of foreign keys. The key represent the name of the column, the value is the id
      * @return the id of the row for the object inserted
      */
-    public <T, U> long insert(T entity, HashMap<String, Long> foreignKeys) {
+    public <T, U> long insert(String jsonDb, T entity, HashMap<String, Long> foreignKeys) {
         long rowId = -1;
-        List<Column> nestedLists = ObjectHelper.getCustomListColumns(entity.getClass().getSimpleName());
-        List<Column> nestedObjects = ObjectHelper.getNestedObjects(entity.getClass().getSimpleName());
-        ContentValues entityValues = ObjectHelper.getEntityContentValues(entity);
+        List<Column> nestedLists = ObjectHelper.getCustomListColumns(jsonDb, entity.getClass().getSimpleName());
+        List<Column> nestedObjects = ObjectHelper.getNestedObjects(jsonDb, entity.getClass().getSimpleName());
+        ContentValues entityValues = ObjectHelper.getEntityContentValues(jsonDb, entity);
 
         if (foreignKeys != null) {
             for(Map.Entry<String, Long> key : foreignKeys.entrySet()) {
@@ -47,7 +47,7 @@ public class OperationHelper {
                 Field field = entity.getClass().getDeclaredField(column.getLabel());
                 field.setAccessible(true);
                 Object actualObject = field.get(entity);
-                long id = insert(actualObject, null);
+                long id = insert(jsonDb, actualObject, null);
                 entityValues.put(column.getLabel(), id);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -63,7 +63,7 @@ public class OperationHelper {
                 Object actualObject = field.get(entity);
                 HashMap<String, Long> foreignKey = new HashMap<>();
                 foreignKey.put("id_" + entity.getClass().getSimpleName(), rowId);
-                insert((List<U>)actualObject, foreignKey);
+                insert(jsonDb, (List<U>)actualObject, foreignKey);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -77,11 +77,11 @@ public class OperationHelper {
      * @param list: list of object to save
      * @return the list of rows id
      */
-    public <T> List<Long> insert(List<T> list, HashMap<String, Long> foreignKeys) {
+    public <T> List<Long> insert(String jsonDb, List<T> list, HashMap<String, Long> foreignKeys) {
         if (list.size() <= 0) return null;
         List<Long> rows = new ArrayList<>();
         for(T entity : list) {
-            rows.add(insert(entity, foreignKeys));
+            rows.add(insert(jsonDb, entity, foreignKeys));
         }
         return rows;
     }
@@ -91,7 +91,7 @@ public class OperationHelper {
      * @param classType: the class corresponding to the table where rows should be fetched
      * @param condition: WHERE condition, example: "id=3". Can be null
      */
-    public <T> List<T> fetchAll(Class<T> classType, String condition) {
+    public <T> List<T> fetchAll(String jsonDb, Class<T> classType, String condition) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName(), condition));
         if (cursor == null || cursor.getCount() <= 0) return null;
 
@@ -100,7 +100,7 @@ public class OperationHelper {
         List<T> entities = new ArrayList<>();
 
         do {
-            T entity = getEntity(classType, cursor);
+            T entity = getEntity(jsonDb, classType, cursor);
             entities.add(entity);
             next = cursor.moveToNext();
         } while (next);
@@ -113,11 +113,11 @@ public class OperationHelper {
      * @param classType: the class corresponding to the table where rows should be fetched
      * @param condition: WHERE condition, example: "id=3". Can be null
      */
-    public <T> T fetchFirst(Class<T> classType, String condition) {
+    public <T> T fetchFirst(String jsonDb, Class<T> classType, String condition) {
         Cursor cursor = proxyRequest(getFetchAllRequest(classType.getSimpleName(), condition));
         if (cursor == null || cursor.getCount() <= 0) return null;
         cursor.moveToFirst();
-        T entity = getEntity(classType, cursor);
+        T entity = getEntity(jsonDb, classType, cursor);
         cursor.close();
         return entity;
     }
@@ -127,12 +127,12 @@ public class OperationHelper {
      * @param classType: the class corresponding to the table where rows should be fetched
      * @param id: the id to look for
      */
-    public <T> T fetchById(Class<T> classType, String id) {
+    public <T> T fetchById(String jsonDb, Class<T> classType, String id) {
         Cursor cursor = proxyRequest(getFetchByIdRequest(classType.getSimpleName(), id));
         if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
-        T entity = getEntity(classType, cursor);
+        T entity = getEntity(jsonDb, classType, cursor);
         cursor.close();
         return entity;
     }
@@ -144,12 +144,12 @@ public class OperationHelper {
      * <p>The row id or ROWID is an hidden field generated by Sqlite for each row of every table. It correspond to
      * a long value.</p>
      */
-    public <T> T fetchByRowId(Class<T> classType, long id) {
+    public <T> T fetchByRowId(String jsonDb, Class<T> classType, long id) {
         Cursor cursor = proxyRequest(getFetchByRowIdRequest(classType.getSimpleName(), id));
         if (cursor == null || cursor.getCount() <= 0) return null;
 
         cursor.moveToFirst();
-        T entity = getEntity(classType, cursor);
+        T entity = getEntity(jsonDb, classType, cursor);
         cursor.close();
         return entity;
     }
@@ -158,10 +158,10 @@ public class OperationHelper {
      * update the row corresponding to the entity passed by argument
      * @return true if it worked otherwise false
      */
-    public <T> boolean update(T entity) {
+    public <T> boolean update(String jsonDb, T entity) {
         String id = getEntityId(entity);
         if (id != "-1") {
-            long number = update(entity, id);
+            long number = update(jsonDb, entity, id);
             return number > 0;
         } else {
             return false;
@@ -172,15 +172,15 @@ public class OperationHelper {
      * Save the entity in db if it does not exist or update it otherwise.
      * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted
      */
-    public <T> long saveOrUpdate(T entity) {
+    public <T> long saveOrUpdate(String jsonDb, T entity) {
         String id = getEntityId(entity);
         if (!id.equals("-1")) {
             Cursor cursor = proxyRequest(getFetchByIdRequest(entity.getClass().getSimpleName(), id));
             if (cursor != null && cursor.getCount() > 0) {
-                update(entity, id);
+                update(jsonDb, entity, id);
                 return 0;
             } else {
-                return insert(entity, null);
+                return insert(jsonDb, entity, null);
             }
         } else {
             return -1;
@@ -191,11 +191,11 @@ public class OperationHelper {
      * for each item in the list, it save it in db if it does not exist, or update it otherwise.
      * @return for each items, -1 if it failed, 0 if a row was updated or the rowid if it inserted
      */
-    public <T> List<Long> saveOrUpdate(List<T> list) {
+    public <T> List<Long> saveOrUpdate(String jsonDb, List<T> list) {
         if (list.size() <= 0) return null;
         List<Long> results = new ArrayList<>();
         for(T entity : list) {
-            results.add(saveOrUpdate(entity));
+            results.add(saveOrUpdate(jsonDb, entity));
         }
         return results;
     }
@@ -228,21 +228,20 @@ public class OperationHelper {
         return "SELECT ROWID, * FROM " + name + " WHERE ROWID='" + rowId + "';";
     }
 
-    private <T, U> T getEntity(Class<T> classType, Cursor cursor) {
-        T entity = EntityBuilder.bindCursorToEntity(classType, cursor);
+    private <T, U> T getEntity(String jsonDb, Class<T> classType, Cursor cursor) {
+        T entity = EntityBuilder.bindCursorToEntity(jsonDb, classType, cursor);
         for (Field field : ObjectHelper.getDeclaredFields(classType)) {
             if (ObjectHelper.isAList(field)) {
-                Type listType = ObjectHelper.getActualListType(field);
-                if (ObjectHelper.isCustomType(listType.getClass().getSimpleName())) {
+                if (ObjectHelper.isCustomType(ObjectHelper.getActualListType(field).getSimpleName())) {
                     try {
-                        Field idField = classType.getDeclaredField("id");
-                        String id = (String)idField.get(entity);
-                        List<U> list = (List<U>)fetchAll(field.getClass(), "id_" + classType.getSimpleName() + "=" + id);
+                        int rowIdIdx = cursor.getColumnIndex("rowid");
+                        if (rowIdIdx == -1) continue;
+                        long id = cursor.getLong(rowIdIdx);
+                        List<U> list = (List<U>)fetchAll(jsonDb, ObjectHelper.getActualListType(field),
+                                "id_" + classType.getSimpleName() + "=" + String.valueOf(id));
                         field.setAccessible(true);
                         field.set(entity, list);
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchFieldException e) {
                         e.printStackTrace();
                     }
                 }
@@ -251,7 +250,7 @@ public class OperationHelper {
                 try {
                     int idx = cursor.getColumnIndex(field.getName());
                     long rowId = cursor.getLong(idx);
-                    U object = (U)fetchFirst(field.getType(), "ROWID="+rowId);
+                    U object = (U)fetchFirst(jsonDb, field.getType(), "ROWID="+rowId);
                     field.setAccessible(true);
                     field.set(entity, object);
                 } catch (IllegalAccessException e) {
@@ -262,8 +261,8 @@ public class OperationHelper {
         return entity;
     }
 
-    private <T> long update(T entity, String id) {
-        return db.update(entity.getClass().getSimpleName(), ObjectHelper.getEntityContentValues(entity), id);
+    private <T> long update(String jsonDb, T entity, String id) {
+        return db.update(entity.getClass().getSimpleName(), ObjectHelper.getEntityContentValues(jsonDb, entity), id);
     }
 
     private <T> String getEntityId(T entity) {

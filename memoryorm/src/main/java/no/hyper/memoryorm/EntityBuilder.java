@@ -67,9 +67,9 @@ public class EntityBuilder {
      * @param classType: The type of the object that will be return.
      * @param cursor: cursor containing the values for the entity.
      */
-    public static <T> HashMap<String, Object> bindCursorToHashMap(Class<T> classType, Cursor cursor) {
+    public static <T> HashMap<String, Object> bindCursorToHashMap(String jsonDb, Class<T> classType, Cursor cursor) {
         HashMap<String, Object> map = new HashMap<>();
-        Table table = SchemaHelper.getInstance().getTable(classType.getSimpleName());
+        Table table = SchemaHelper.getInstance().getTable(jsonDb, classType.getSimpleName());
 
         for (Column column : table.getColumns()) {
             int index = cursor.getColumnIndex(column.getLabel());
@@ -106,8 +106,8 @@ public class EntityBuilder {
      * @param classType: The type of the object that will be return.
      * @param cursor: cursor containing the values for the entity.
      */
-    public static <T> T bindCursorToEntity(Class<T> classType, Cursor cursor) {
-        HashMap<String, Object> map = bindCursorToHashMap(classType, cursor);
+    public static <T> T bindCursorToEntity(String jsonDb, Class<T> classType, Cursor cursor) {
+        HashMap<String, Object> map = bindCursorToHashMap(jsonDb, classType, cursor);
         T entity = null;
         try {
             Constructor constructor = classType.getDeclaredConstructors()[0];

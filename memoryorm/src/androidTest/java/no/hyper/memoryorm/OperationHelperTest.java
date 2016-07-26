@@ -19,6 +19,7 @@ import java.util.List;
 public class OperationHelperTest {
 
     private static final String DB_NAME = "DbTest";
+    private static final String JSON_DB = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"},{\"label\":\"id_PersonGroup\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"members\",\"list\":true,\"type\":\"Person\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
 
     private static Context context;
     private static DbManager manager;
@@ -66,7 +67,7 @@ public class OperationHelperTest {
     public void start() throws Exception {
         context = InstrumentationRegistry.getContext();
         manager = new DbManager(context, DB_NAME, null, 1);
-        tableHelper = new TableHelper(manager);
+        tableHelper = new TableHelper(manager, JSON_DB);
         operationHelper = new OperationHelper(manager);
         manager.openDb();
     }
@@ -81,7 +82,7 @@ public class OperationHelperTest {
     public void shouldInsert() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        long id = operationHelper.insert(groups.get(0), null);
+        long id = operationHelper.insert(JSON_DB, groups.get(0), null);
 
         Assert.assertEquals(1, id);
 
@@ -96,7 +97,7 @@ public class OperationHelperTest {
     public void shouldInsertList() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        List<Long> ids = operationHelper.insert(groups, null);
+        List<Long> ids = operationHelper.insert(JSON_DB, groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
@@ -113,7 +114,7 @@ public class OperationHelperTest {
     public void shouldFetchAll() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        List<Long> ids = operationHelper.insert(groups, null);
+        List<Long> ids = operationHelper.insert(JSON_DB, groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
@@ -125,7 +126,7 @@ public class OperationHelperTest {
         cursor = manager.rawQuery("SELECT * FROM Person", null);
         Assert.assertEquals(9, cursor.getCount());
 
-        List<PersonGroup> fetched = operationHelper.fetchAll(PersonGroup.class, null);
+        List<PersonGroup> fetched = operationHelper.fetchAll(JSON_DB, PersonGroup.class, null);
         Assert.assertEquals(3, fetched.size());
     }
 
@@ -133,13 +134,13 @@ public class OperationHelperTest {
     public void shouldFetchById() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        List<Long> ids = operationHelper.insert(groups, null);
+        List<Long> ids = operationHelper.insert(JSON_DB, groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
         }
 
-        PersonGroup group = operationHelper.fetchById(PersonGroup.class, "group1");
+        PersonGroup group = operationHelper.fetchById(JSON_DB, PersonGroup.class, "group1");
         Assert.assertEquals("group1", group.id);
     }
 
@@ -147,13 +148,13 @@ public class OperationHelperTest {
     public void shouldFetchByRowId() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        List<Long> ids = operationHelper.insert(groups, null);
+        List<Long> ids = operationHelper.insert(JSON_DB, groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
         }
 
-        PersonGroup group = operationHelper.fetchByRowId(PersonGroup.class, (long)1);
+        PersonGroup group = operationHelper.fetchByRowId(JSON_DB, PersonGroup.class, (long)1);
         Assert.assertEquals("group0", group.id);
     }
 
@@ -161,21 +162,21 @@ public class OperationHelperTest {
     public void shouldUpdate() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        List<Long> ids = operationHelper.insert(groups, null);
+        List<Long> ids = operationHelper.insert(JSON_DB, groups, null);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
         }
 
-        PersonGroup group = operationHelper.fetchById(PersonGroup.class, "group1");
+        PersonGroup group = operationHelper.fetchById(JSON_DB, PersonGroup.class, "group1");
         Assert.assertEquals("group1", group.id);
 
         group.name = "test";
-        boolean worked = operationHelper.update(group);
+        boolean worked = operationHelper.update(JSON_DB, group);
 
         Assert.assertEquals(true, worked);
 
-        groups = operationHelper.fetchAll(PersonGroup.class, "name='test'");
+        groups = operationHelper.fetchAll(JSON_DB, PersonGroup.class, "name='test'");
         Assert.assertEquals(1, groups.size());
     }
 
@@ -183,21 +184,21 @@ public class OperationHelperTest {
     public void shouldSaveOrUpdate() throws Exception {
         tableHelper.createTables();
         List<PersonGroup> groups = getGroups();
-        List<Long> ids = operationHelper.saveOrUpdate(groups);
+        List<Long> ids = operationHelper.saveOrUpdate(JSON_DB, groups);
 
         for (int i = 0; i < ids.size(); i++) {
             Assert.assertEquals(Long.valueOf(i+1), ids.get(i));
         }
 
-        PersonGroup group = operationHelper.fetchById(PersonGroup.class, "group1");
+        PersonGroup group = operationHelper.fetchById(JSON_DB, PersonGroup.class, "group1");
         Assert.assertEquals("group1", group.id);
 
         group.name = "test";
-        long worked = operationHelper.saveOrUpdate(group);
+        long worked = operationHelper.saveOrUpdate(JSON_DB, group);
 
         Assert.assertEquals(0, worked);
 
-        groups = operationHelper.fetchAll(PersonGroup.class, "name='test'");
+        groups = operationHelper.fetchAll(JSON_DB, PersonGroup.class, "name='test'");
         Assert.assertEquals(1, groups.size());
     }
 

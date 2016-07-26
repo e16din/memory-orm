@@ -1,0 +1,58 @@
+{
+  "tables": [{
+    "name": "Gear",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "magical",
+      "type": "integer"
+    }, {
+      "label": "id_Profile",
+      "type": "integer"
+    }]
+  }, {
+    "name": "House",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "place",
+      "type": "text"
+    }, {
+      "label": "id_Profile",
+      "type": "integer"
+    }]
+  }, {
+    "name": "Profile",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "age",
+      "type": "integer"
+    }, {
+      "label": "human",
+      "type": "integer"
+    }, {
+      "label": "gear",
+      "type": "Gear",
+      "list": true
+    }, {
+      "label": "house",
+      "type": "House"
+    }]
+  }]
+}

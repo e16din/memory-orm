@@ -21,6 +21,7 @@ import no.hyper.memoryorm.model.Table;
 public class MemoryTest {
 
     private static final String DB_NAME = "DbTest";
+    private static final String JSON_DB = "{\"tables\":[{\"name\":\"Person\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"age\",\"type\":\"integer\"},{\"label\":\"active\",\"type\":\"integer\"},{\"label\":\"id_PersonGroup\",\"type\":\"integer\"}]},{\"name\":\"PersonGroup\",\"columns\":[{\"label\":\"id\",\"type\":\"text\",\"primary\":true},{\"label\":\"name\",\"type\":\"text\"},{\"label\":\"chef\",\"type\":\"Person\"},{\"label\":\"departments\",\"list\":true,\"type\":\"text\"},{\"label\":\"members\",\"list\":true,\"type\":\"Person\"},{\"label\":\"codes\",\"list\":true,\"type\":\"integer\"}]}]}";
 
     private Memory memory;
     private Context context;
@@ -39,6 +40,20 @@ public class MemoryTest {
             this.active = active;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this.getClass() != o.getClass()) return false;
+            boolean id = this.id.equals(((Person)o).id);
+            boolean name = this.name.equals(((Person)o).name);
+            boolean age = this.age == ((Person)o).age;
+            boolean active = this.active == ((Person)o).active;
+
+            if (id && name && age && active) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     private class PersonGroup {
@@ -60,12 +75,46 @@ public class MemoryTest {
             this.codes = codes;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o.getClass() != this.getClass()) return false;
+            boolean id = this.id.equals(((PersonGroup)o).id);
+            boolean name = this.name.equals(((PersonGroup)o).name);
+            boolean chef = this.chef.equals(((PersonGroup)o).chef);
+
+            boolean members = true;
+            for (int i = 0; i < this.members.size(); i++) {
+                if (!this.members.get(i).equals(((PersonGroup)o).members.get(i))) {
+                    members = false;
+                }
+            }
+
+            boolean departments = true;
+            for (int i = 0; i < this.departments.size(); i++) {
+                if (!this.departments.get(i).equals(((PersonGroup)o).departments.get(i))) {
+                    departments = false;
+                }
+            }
+
+            boolean codes = true;
+            for (int i = 0; i < this.codes.size(); i++) {
+                if (!this.codes.get(i).equals(((PersonGroup)o).codes.get(i))) {
+                    codes = false;
+                }
+            }
+
+            if (id && name && members && chef && departments && codes) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     @Before
     public void start() throws Exception {
         context = InstrumentationRegistry.getContext();
-        memory = new Memory(context);
+        memory = new Memory(context, JSON_DB);
     }
 
     @After
@@ -76,14 +125,15 @@ public class MemoryTest {
     @Test
     public void shouldCreateDatabase() throws Exception {
         memory.createTables();
-        Table personTable = SchemaHelper.getInstance().getTable(Person.class.getSimpleName());
-        Table personGroupTable = SchemaHelper.getInstance().getTable(PersonGroup.class.getSimpleName());
+        Table personTable = SchemaHelper.getInstance().getTable(JSON_DB, Person.class.getSimpleName());
+        Table personGroupTable = SchemaHelper.getInstance().getTable(JSON_DB, PersonGroup.class.getSimpleName());
 
         Assert.assertTrue(personTable != null && personGroupTable != null);
     }
 
     @Test
-    public void shouldSave() {
+    public void shouldSave() throws Exception {
+        cleanDB();
         memory.save(new Person("id", "test", 23, true));
 
         memory.openDb();
@@ -93,8 +143,11 @@ public class MemoryTest {
     }
 
     @Test
-    public void shouldSaveList() {
-        memory.save(getGroups());
+    public void shouldSaveList() throws Exception {
+        cleanDB();
+
+        List<PersonGroup> samples = getGroups();
+        memory.save(samples);
 
         memory.openDb();
         Cursor cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
@@ -105,10 +158,77 @@ public class MemoryTest {
         memory.closeDb();
     }
 
+    @Test
+    public void shouldCleanDatabase() throws Exception {
+        memory.cleanTables();
+
+        memory.openDb();
+        Cursor cursor = memory.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(0, cursor.getCount());
+        cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(0, cursor.getCount());
+        memory.closeDb();
+    }
 
     @Test
-    public void shouldCleanDatabase() {
-        memory.save(getGroups());
+    public void shouldFetchAll() throws Exception {
+       prepareTableForTest();
+
+        List<PersonGroup> group = memory.fetchAll(PersonGroup.class);
+        for (int i = 0; i < group.size(); i++) {
+            Assert.assertTrue(group.get(0).equals(getGroups().get(0)));
+        }
+    }
+
+    @Test
+    public void shouldFetchFirst() throws Exception {
+       prepareTableForTest();
+
+        PersonGroup group = memory.fetchFirst(PersonGroup.class);
+        Assert.assertTrue(group.equals(getGroups().get(0)));
+    }
+
+    @Test
+    public void shouldFetchById() throws Exception {
+        prepareTableForTest();
+
+        PersonGroup group = memory.fetchById(PersonGroup.class, "group0");
+        Assert.assertTrue(group.equals(getGroups().get(0)));
+    }
+
+    @Test
+    public void shouldUpdateEntity() throws Exception {
+        prepareTableForTest();
+
+        PersonGroup group = memory.fetchFirst(PersonGroup.class);
+        group.name = "updated name";
+        memory.update(group);
+
+        PersonGroup check = memory.fetchFirst(PersonGroup.class);
+        Assert.assertTrue(group.name.equals(check.name));
+    }
+
+    @Test
+    public void shouldUpdateListEntity() throws Exception {
+        prepareTableForTest();
+        List<PersonGroup> groups = memory.fetchAll(PersonGroup.class);
+        for (int i = 0; i < groups.size(); i++) {
+            groups.get(i).name = "updated name";
+        }
+        memory.update(groups);
+
+        List<PersonGroup> checks = memory.fetchAll(PersonGroup.class);
+        for (int i = 0; i < checks.size(); i++) {
+            Assert.assertTrue(groups.get(i).name.equals(checks.get(i).name));
+        }
+    }
+
+    @Test
+    public void shouldSaveOrUpdateList() throws Exception {
+        cleanDB();
+
+        List<PersonGroup> groups = getGroups();
+        memory.saveOrUpdate(groups);
 
         memory.openDb();
         Cursor cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
@@ -118,14 +238,15 @@ public class MemoryTest {
         Assert.assertEquals(9, cursor.getCount());
         memory.closeDb();
 
-        memory.cleanTables();
+        for (int i = 0; i < groups.size(); i++) {
+            groups.get(i).name = "updated name";
+        }
+        memory.update(groups);
 
-        memory.openDb();
-        cursor = memory.rawQuery("SELECT * FROM Person", null);
-        Assert.assertEquals(0, cursor.getCount());
-        cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
-        Assert.assertEquals(0, cursor.getCount());
-        memory.closeDb();
+        List<PersonGroup> checks = memory.fetchAll(PersonGroup.class);
+        for (int i = 0; i < checks.size(); i++) {
+            Assert.assertTrue(groups.get(i).name.equals(checks.get(i).name));
+        }
     }
 
     private List<PersonGroup> getGroups() {
@@ -169,6 +290,30 @@ public class MemoryTest {
         groups.add(new PersonGroup("group2", "group2", chef2, members2, departments2, codes2));
 
         return groups;
+    }
+
+    private void prepareTableForTest() {
+        cleanDB();
+        memory.save(getGroups());
+
+        memory.openDb();
+        Cursor cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(3, cursor.getCount());
+
+        cursor = memory.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(9, cursor.getCount());
+        memory.closeDb();
+    }
+
+    private void cleanDB() {
+        memory.cleanTables();
+
+        memory.openDb();
+        Cursor cursor = memory.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(0, cursor.getCount());
+        cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(0, cursor.getCount());
+        memory.closeDb();
     }
 
 }

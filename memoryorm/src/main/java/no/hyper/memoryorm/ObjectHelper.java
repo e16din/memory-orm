@@ -16,6 +16,7 @@ import no.hyper.memoryorm.model.Table;
 public class ObjectHelper {
 
     private static String THIS = "this";
+    private static String CHANGE = "change";
 
     /**
      * return the list of fields declared in the class without the `this` implicit field
@@ -24,7 +25,7 @@ public class ObjectHelper {
         Field[] all = classType.getDeclaredFields();
         List<Field> fields = new ArrayList<>();
         for(int i = 0; i < all.length; i++) {
-            if (all[i].getName().contains(THIS)) continue;
+            if (all[i].getName().contains(THIS) || all[i].getName().contains(CHANGE)) continue;
             fields.add(all[i]);
         }
         return fields;
@@ -55,8 +56,8 @@ public class ObjectHelper {
      * return a list of field for which the type is List
      * @param tableName: the class containing the attibutes to test
      */
-    public static List<Column> getCustomListColumns(String tableName) {
-        Table table = SchemaHelper.getInstance().getTable(tableName);
+    public static List<Column> getCustomListColumns(String jsonDb, String tableName) {
+        Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
             if (column.isList() && isCustomType(getEquivalentJavaType(column.getType()))) {
@@ -70,8 +71,8 @@ public class ObjectHelper {
      * return a list of field that have a custom type
      * @param tableName: the class containing the attibutes to test
      */
-    public static List<Column> getNestedObjects(String tableName) {
-        Table table = SchemaHelper.getInstance().getTable(tableName);
+    public static List<Column> getNestedObjects(String jsonDb, String tableName) {
+        Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
             if (!column.isList() && isCustomType(getEquivalentJavaType(column.getType()))) {
@@ -141,9 +142,9 @@ public class ObjectHelper {
         return (Class<T>) listType.getActualTypeArguments()[0];
     }
 
-    public static <T, U> ContentValues getEntityContentValues(T entity) {
+    public static <T, U> ContentValues getEntityContentValues(String jsonDb, T entity) {
         Class c = entity.getClass();
-        Table table = SchemaHelper.getInstance().getTable(c.getSimpleName());
+        Table table = SchemaHelper.getInstance().getTable(jsonDb, c.getSimpleName());
         ContentValues values = new ContentValues();
         for(Column column : table.getColumns()) {
             try {
