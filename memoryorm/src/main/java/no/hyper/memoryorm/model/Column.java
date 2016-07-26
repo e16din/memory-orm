@@ -1,5 +1,6 @@
 package no.hyper.memoryorm.model;
 
+
 import com.google.gson.annotations.SerializedName;
 
 /**

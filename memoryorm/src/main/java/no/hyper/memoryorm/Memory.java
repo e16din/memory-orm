@@ -45,7 +45,8 @@ public class Memory {
     /**
      * save an object in its corresponding table
      * @param entity the object to save
-     * @return
+     * @param <T>
+     * @return if it succeed, the rowid is returned, null otherwise
      */
     public <T> long save(T entity) {
         db.openDb();
@@ -56,9 +57,9 @@ public class Memory {
 
     /**
      * save a list of object in their corresponding database
-     * @param list
+     * @param list the list of item to save
      * @param <T>
-     * @return
+     * @return if it succeed, the list of rowids is returned, null otherwise
      */
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
@@ -71,6 +72,7 @@ public class Memory {
     /**
      * return from the database a list of object contained in a table
      * @param classType the type of the object corresponding to a table in the database
+     * @param <T>
      * @return all the rows from the table
      */
     public <T> List<T>  fetchAll(Class<T> classType) {
@@ -83,6 +85,7 @@ public class Memory {
     /**
      * return from the database the first object contained in a table
      * @param entityToFetch the type of the object corresponding to a table in the database
+     * @param <T>
      * @return a single object from the table
      */
     public <T> T fetchFirst(Class<T> entityToFetch) {
@@ -96,6 +99,7 @@ public class Memory {
      * return from the database the object with the specified id
      * @param entityToFetch the type of the object corresponding to a table in the database
      * @param id the id to look for
+     * @param <T>
      * @return a single object from the table
      */
     public <T> T fetchById (Class<T> entityToFetch, String id) {
@@ -108,6 +112,7 @@ public class Memory {
     /**
      * update the row in database represented by an object
      * @param entity the object to update
+     * @param <T>
      * @return true if it worked, false otherwise
      */
     public <T> boolean update(T entity) {
@@ -120,6 +125,7 @@ public class Memory {
     /**
      * update the rows in database represented by the objects
      * @param list list of entity to update
+     * @param <T>
      * @return list of boolean, one for each update, in the same order
      */
     public <T> List<Boolean> update(List<T> list) {
@@ -135,6 +141,7 @@ public class Memory {
     /**
      * if the object does not exist in database, it will be inserted, or update otherwise
      * @param entity entity to either save or update
+     * @param <T>
      * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted
      */
     public <T> long saveOrUpdate(T entity) {
@@ -147,6 +154,7 @@ public class Memory {
     /**
      * execute the function `saveOrUpdate` for each items of the list
      * @param list list of item to save or update
+     * @param <T>
      * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted, for each items
      */
     public <T> List<Long> saveOrUpdate(List<T> list) {

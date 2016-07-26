@@ -33,6 +33,9 @@ public class ObjectHelper {
 
     /**
      * Return true or false if the field pass as parameter is a custom type
+     * @param classname the name of the class to test
+     * @param <T>
+     * @return true if the class is a custom one, false otherwise
      */
     public static <T> boolean isCustomType(String classname) {
         try {
@@ -47,6 +50,8 @@ public class ObjectHelper {
 
     /**
      * return true if the field type is List, else false
+     * @param field the field to test
+     * @return true if the type of the field is a list, false otherwise
      */
     public static boolean isAList(Field field) {
         return field.getType().getSimpleName().equals(List.class.getSimpleName());
@@ -55,6 +60,7 @@ public class ObjectHelper {
     /**
      * return a list of field for which the type is List
      * @param tableName: the class containing the attibutes to test
+     * @return a list containing the column that represent a list of custom type
      */
     public static List<Column> getCustomListColumns(String jsonDb, String tableName) {
         Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
@@ -70,6 +76,7 @@ public class ObjectHelper {
     /**
      * return a list of field that have a custom type
      * @param tableName: the class containing the attibutes to test
+     * @return a list containing the column that represent a object of custom type
      */
     public static List<Column> getNestedObjects(String jsonDb, String tableName) {
         Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
@@ -84,6 +91,9 @@ public class ObjectHelper {
 
     /**
      * return the equivalent sql type of a java type
+     * @param classType the type to look for an equivalent sql type
+     * @param <T>
+     * @return a string representing the equivalent sql type
      */
     public static <T> String getEquivalentSqlType(Class<T> classType) {
         if (isCustomType(classType.getSimpleName())) return "INTEGER";
@@ -96,6 +106,8 @@ public class ObjectHelper {
 
     /**
      * return the equivalent sql type of a java type
+     * @param sqlType the sql type to look for an java equivalent
+     * @return a string representing an java equivalent
      */
     public static String getEquivalentJavaType(String sqlType) {
         switch (sqlType) {
@@ -136,6 +148,9 @@ public class ObjectHelper {
 
     /**
      * return the class type of object contained by the list
+     * @param list the list used to find the actual type
+     * @param <T>
+     * @return a class corresponding to the actual type
      */
     public static <T> Class<T> getActualListType(Field list) {
         ParameterizedType listType = (ParameterizedType) list.getGenericType();

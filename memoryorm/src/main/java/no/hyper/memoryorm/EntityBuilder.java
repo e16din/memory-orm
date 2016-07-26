@@ -8,7 +8,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import no.hyper.memoryorm.model.Column;
 import no.hyper.memoryorm.model.Table;
@@ -20,9 +19,9 @@ public class EntityBuilder {
 
     /**
      * return an array of default values to use as parameters for a given constructor.
-     * <p>The constructor used is the first one obtained by reflection.</p>
+     * The constructor used is the first one obtained by reflection.
      * @param classes: Array of parameters' class.
-     * @return: int -> 0, boolean -> false, String -> "".
+     * @return: int = 0, boolean = false, String = "".
      */
     public static Object[] getDefaultConstructorParameters(Class<?>[] classes) {
         Object[] parameters = new Object[classes.length];
@@ -38,9 +37,10 @@ public class EntityBuilder {
 
     /**
      * bind the value of the hash map in the entity.
-     * <p>The key of the hash maps have to be equals to the name of the entity's attributes.</p>
+     * The key of the hash maps have to be equals to the name of the entity's attributes.
      * @param entity: the instance to bind the values into.
      * @param values: the non-custom values of the entity to bind
+     * @param <T>
      * @return the entity with the values pass in the hash maps
      */
     public static <T> T bindHashMapToEntity(T entity, HashMap<String, Object> values) {
@@ -66,6 +66,7 @@ public class EntityBuilder {
      * return an object of type T binded with the values of the cursor passed.
      * @param classType: The type of the object that will be return.
      * @param cursor: cursor containing the values for the entity.
+     * @param <T>
      */
     public static <T> HashMap<String, Object> bindCursorToHashMap(String jsonDb, Class<T> classType, Cursor cursor) {
         HashMap<String, Object> map = new HashMap<>();
@@ -105,6 +106,7 @@ public class EntityBuilder {
      * return an object of type T binded with the values present in the cursor
      * @param classType: The type of the object that will be return.
      * @param cursor: cursor containing the values for the entity.
+     * @param <T>
      */
     public static <T> T bindCursorToEntity(String jsonDb, Class<T> classType, Cursor cursor) {
         HashMap<String, Object> map = bindCursorToHashMap(jsonDb, classType, cursor);
