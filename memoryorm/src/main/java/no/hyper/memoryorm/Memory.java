@@ -43,6 +43,17 @@ public class Memory {
     }
 
     /**
+     * delete every row from one tables
+     * @param tableName the name of the table to clean
+     * @param clause a clause to specify which rows need to be erased
+     */
+    public void cleanTable(String tableName, String clause) {
+        db.openDb();
+        tableHelper.cleanTable(tableName, clause);
+        db.closeDb();
+    }
+
+    /**
      * save an object in its corresponding table
      * @param entity the object to save
      * @param <T>

@@ -49,7 +49,8 @@ public class EntityBuilder {
                 Object value = values.get(field.getName());
                 field.setAccessible(true);
                 if (value == null) continue;
-                if (field.getType().getSimpleName().equals("boolean")) {
+                String typeName = field.getType().getSimpleName();
+                if (typeName.equals("boolean") || typeName.equals("Boolean")) {
                     field.set(entity, value.equals(1));
                 } else {
                     field.set(entity, value);

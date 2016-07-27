@@ -171,6 +171,18 @@ public class MemoryTest {
     }
 
     @Test
+    public void shouldCleanOneTable() throws Exception {
+        memory.cleanTable("Person", null);
+
+        memory.openDb();
+        Cursor cursor = memory.rawQuery("SELECT * FROM Person", null);
+        Assert.assertEquals(0, cursor.getCount());
+        cursor = memory.rawQuery("SELECT * FROM PersonGroup", null);
+        Assert.assertEquals(3, cursor.getCount());
+        memory.closeDb();
+    }
+
+    @Test
     public void shouldFetchAll() throws Exception {
        prepareTableForTest();
 
