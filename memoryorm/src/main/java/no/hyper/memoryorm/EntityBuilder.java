@@ -125,6 +125,7 @@ public class EntityBuilder {
                 }
                 if (valid) {
                     validConstructor = constructor;
+                    break;
                 }
             }
             if (validConstructor != null) {
