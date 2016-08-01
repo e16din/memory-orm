@@ -79,7 +79,7 @@ The library relies on a json description of your database to build it. You need 
 }
 ```
 
-The file HAS TO be placed like this `asset/schema/database.json`. Of course, you also need to have the corresponding POJO or `data class` object that goes with each table described in your json.
+The file HAS TO be placed like this `asset/schema/database.json`. Of course, you also need to have the corresponding POJO or `data class` object that go with each table described in your json.
 
 ``` kotlin
 data class Gear (
