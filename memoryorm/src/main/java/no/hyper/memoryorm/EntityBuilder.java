@@ -113,10 +113,26 @@ public class EntityBuilder {
         HashMap<String, Object> map = bindCursorToHashMap(jsonDb, classType, cursor);
         T entity = null;
         try {
-            Constructor constructor = classType.getDeclaredConstructors()[0];
-            Object[] parameters = getDefaultConstructorParameters(constructor.getParameterTypes());
-            entity = (T)constructor.newInstance(parameters);
-            entity = bindHashMapToEntity(entity, map);
+            Constructor[] constructors = classType.getDeclaredConstructors();
+            Constructor validConstructor = null;
+            for (Constructor constructor : constructors) {
+                boolean valid = true;
+                for (Class c : constructor.getParameterTypes()) {
+                    if (c.getSimpleName().equals("InstantReloadException") ||
+                            c.getSimpleName().equals("DefaultConstructorMarker")) {
+                        valid = false;
+                    }
+                }
+                if (valid) {
+                    validConstructor = constructor;
+                    break;
+                }
+            }
+            if (validConstructor != null) {
+                Object[] parameters = getDefaultConstructorParameters(validConstructor.getParameterTypes());
+                entity = (T)validConstructor.newInstance(parameters);
+                entity = bindHashMapToEntity(entity, map);
+            }
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
