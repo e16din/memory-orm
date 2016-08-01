@@ -6,5 +6,4 @@ package no.hyper.memoryormdemo
 data class House (
     var name : String,
     var place : String,
-    val id : String? = null
-)
+    val id : String? = null)
