@@ -7,7 +7,7 @@ With Memory you will be able to use your classic POJO Java classes but also the
 # Gradle
 
 ```
-compile 'no.hyper.memoryorm:memoryorm:0.2.3'
+compile 'no.hyper.memoryorm:memoryorm:0.2.4'
 ```
 
 # Usage
@@ -34,7 +34,8 @@ The library relies on a json description of your database to build it. You need 
       "type": "integer"
     }, {
       "label": "id_Profile",
-      "type": "integer"
+      "type": "integer",
+      "foreign_key": true
     }]
   }, {
     "name": "House",
@@ -50,7 +51,8 @@ The library relies on a json description of your database to build it. You need 
       "type": "text"
     }, {
       "label": "id_Profile",
-      "type": "integer"
+      "type": "integer",
+      "foreign_key": true
     }]
   }, {
     "name": "Profile",
