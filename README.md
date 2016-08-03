@@ -150,3 +150,7 @@ memory.update(name)
 ```
 
 Finally, in the case you don't know if an item does not exists in your DB, you can use the `saveOrUpdate` method that check if an item with the same id exists. (Your table need to declare explicitely an id field for this to work)
+
+# License
+
+```
