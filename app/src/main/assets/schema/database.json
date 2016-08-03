@@ -13,7 +13,8 @@
       "type": "integer"
     }, {
       "label": "id_Profile",
-      "type": "integer"
+      "type": "integer",
+      "foreign_key" : true
     }]
   }, {
     "name": "House",
@@ -29,7 +30,8 @@
       "type": "text"
     }, {
       "label": "id_Profile",
-      "type": "integer"
+      "type": "integer",
+      "foreign_key" : true
     }]
   }, {
     "name": "Profile",

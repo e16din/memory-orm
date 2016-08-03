@@ -162,6 +162,8 @@ public class ObjectHelper {
         Table table = SchemaHelper.getInstance().getTable(jsonDb, c.getSimpleName());
         ContentValues values = new ContentValues();
         for(Column column : table.getColumns()) {
+            if (column.isForeignKey()) continue;
+
             try {
                 Field field = c.getDeclaredField(column.getLabel());
                 field.setAccessible(true);
