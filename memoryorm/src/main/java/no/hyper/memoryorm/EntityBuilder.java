@@ -79,19 +79,21 @@ public class EntityBuilder {
             if (index >= 0) {
                 if (column.isList()) {
                     String stringList = cursor.getString(index);
-                    String[] array = stringList.split(";");
-                    if (column.getType().equals("integer")) {
-                        List<Integer> list = new ArrayList<>();
-                        for(String item : array) {
-                            list.add(Integer.valueOf(item));
+                    if (stringList != null && stringList != "") {
+                        String[] array = stringList.split(";");
+                        if (column.getType().equals("integer")) {
+                            List<Integer> list = new ArrayList<>();
+                            for(String item : array) {
+                                list.add(Integer.valueOf(item));
+                            }
+                            map.put(column.getLabel(), list);
+                        } else if (column.getType().equals("text")) {
+                            List<String> list = new ArrayList<>();
+                            for(String item : array) {
+                                list.add(item);
+                            }
+                            map.put(column.getLabel(), list);
                         }
-                        map.put(column.getLabel(), list);
-                    } else if (column.getType().equals("text")) {
-                        List<String> list = new ArrayList<>();
-                        for(String item : array) {
-                            list.add(item);
-                        }
-                        map.put(column.getLabel(), list);
                     }
                 } else if (column.getType().equals("text")) {
                     map.put(column.getLabel(), cursor.getString(index));
