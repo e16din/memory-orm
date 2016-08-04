@@ -30,6 +30,7 @@ public class EntityBuilder {
                 case "int": parameters[i] = 0; break;
                 case "boolean": parameters[i] = false; break;
                 case "String": parameters[i] = ""; break;
+                case "List": parameters[i] = new ArrayList<>();
             }
         }
         return parameters;

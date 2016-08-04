@@ -21,13 +21,14 @@ class MainActivity : AppCompatActivity() {
 
         memory.createTables()
 
-        val finnGear = listOf(Gear("sword", true, "sword1"), Gear("shield", false, "shield1"))
-        val finnHouse = House("tree-house", "unknown", "finnTreeHouse")
-        val finn = Profile("finn", 13, true, finnGear, finnHouse, "profile0")
+        val openingHours = listOf(OpeningHour("monday-saturday", "9-17"), OpeningHour("sunday", "closed"))
+        val departments = listOf("dep1", "dep2")
+        val store = Store("id1", "store1", "address1", "city1", "phone1", "url1", "zip1", openingHours, departments,
+                "code1", "countryname1", "lng1", "lat1")
 
-        memory.save(finn)
+        memory.save(store)
 
-        val check = memory.fetchAll(Profile::class.java)
+        val check = memory.fetchAll(Store::class.java)
         Log.e(LOG_TAG, check.toString())
     }
 

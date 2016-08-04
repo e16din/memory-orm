@@ -56,5 +56,63 @@
       "label": "house",
       "type": "House"
     }]
+  }, {
+    "name": "Store",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "address",
+      "type": "text"
+    }, {
+      "label": "city",
+      "type": "text"
+    }, {
+      "label": "phone",
+      "type": "text"
+    }, {
+      "label": "url",
+      "type": "text"
+    }, {
+      "label": "zipCode",
+      "type": "text"
+    }, {
+      "label": "openingHours",
+      "type": "OpeningHour",
+      "list": true
+    }, {
+      "label": "departments",
+      "type": "text",
+      "list": true
+    }, {
+      "label": "countryCode",
+      "type": "text"
+    }, {
+      "label": "countryName",
+      "type": "text"
+    }, {
+      "label": "lng",
+      "type": "text"
+    }, {
+      "label": "lat",
+      "type": "text"
+    }]
+  }, {
+    "name": "OpeningHour",
+    "columns": [{
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "hours",
+      "type": "text"
+    }, {
+      "label": "id_Store",
+      "type": "integer",
+      "foreign_key": true
+    }]
   }]
 }
