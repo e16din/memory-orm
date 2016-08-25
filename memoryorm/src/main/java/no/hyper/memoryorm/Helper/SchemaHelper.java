@@ -1,4 +1,4 @@
-package no.hyper.memoryorm;
+package no.hyper.memoryorm.Helper;
 
 import com.google.gson.Gson;
 

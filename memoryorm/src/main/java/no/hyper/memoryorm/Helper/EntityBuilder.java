@@ -1,4 +1,4 @@
-package no.hyper.memoryorm;
+package no.hyper.memoryorm.Helper;
 
 import android.database.Cursor;
 
@@ -122,7 +122,8 @@ public class EntityBuilder {
                 boolean valid = true;
                 for (Class c : constructor.getParameterTypes()) {
                     if (c.getSimpleName().equals("InstantReloadException") ||
-                            c.getSimpleName().equals("DefaultConstructorMarker")) {
+                            c.getSimpleName().equals("DefaultConstructorMarker")||
+                            c.getSimpleName().equals("Parcel")) {
                         valid = false;
                     }
                 }

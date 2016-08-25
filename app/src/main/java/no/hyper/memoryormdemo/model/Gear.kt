@@ -1,4 +1,4 @@
-package no.hyper.memoryormdemo
+package no.hyper.memoryormdemo.model
 
 /**
  * Created by Jean on 5/16/2016.

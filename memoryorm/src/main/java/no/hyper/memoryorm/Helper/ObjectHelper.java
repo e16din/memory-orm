@@ -1,12 +1,14 @@
-package no.hyper.memoryorm;
+package no.hyper.memoryorm.Helper;
 
 import android.content.ContentValues;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.hyper.memoryorm.annotation.MemoryIgnore;
 import no.hyper.memoryorm.model.Column;
 import no.hyper.memoryorm.model.Table;
 
@@ -17,6 +19,7 @@ public class ObjectHelper {
 
     private static String THIS = "this";
     private static String CHANGE = "change";
+    private static String COMPANION = "Companion";
 
     /**
      * return the list of fields declared in the class without the `this` implicit field
@@ -24,10 +27,18 @@ public class ObjectHelper {
     public static List<Field> getDeclaredFields(Class classType) {
         Field[] all = classType.getDeclaredFields();
         List<Field> fields = new ArrayList<>();
-        for(int i = 0; i < all.length; i++) {
-            if (all[i].getName().contains(THIS) || all[i].getName().contains(CHANGE)) continue;
+        outerloop : for(int i = 0; i < all.length; i++) {
+            String name = all[i].getName();
+            if (name.contains(THIS) || name.contains(CHANGE) || name.contains(COMPANION)) continue;
+            Annotation[] annotations = all[i].getDeclaredAnnotations();
+            for (Annotation annotation : annotations) {
+                if (annotation.annotationType().equals(MemoryIgnore.class)) {
+                    break outerloop;
+                }
+            }
             fields.add(all[i]);
         }
+
         return fields;
     }
 
@@ -118,35 +129,6 @@ public class ObjectHelper {
     }
 
     /**
-     * Return the the sql request part describing the columns of a table. To use with sql request acting on database
-     * tables like CREATE.
-     * <p>If one field is named "id", the key word "PRIMARY KEY" will be automatically added to the sql description of
-     * the column</p>
-     * @param fields: The fields used to create the columns
-     * @param foreignKeys: If not null, this value will the foreign keys value in the sql description
-     * @return A sql string describing every columns needed in a table
-     */
-    public static String getEquivalentSqlContent(List<Field> fields, List<String> foreignKeys) {
-        StringBuilder sb = new StringBuilder();
-        for(Field field : fields) {
-            String fieldName = field.getName();
-            if (fieldName.equals("id")){
-                String meta = getEquivalentSqlType(field.getType()) +" PRIMARY KEY,";
-                sb.append(fieldName + " " + meta);
-            } else {
-                sb.append(fieldName + " " + getEquivalentSqlType(field.getType()) + ",");
-            }
-        }
-        if (foreignKeys != null && foreignKeys.size() > 0) {
-            for(String foreignKey : foreignKeys) {
-                sb.append("rowId_" + foreignKey + " INTEGER,");
-            }
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        return sb.toString();
-    }
-
-    /**
      * return the class type of object contained by the list
      * @param list the list used to find the actual type
      * @param <T>
@@ -155,6 +137,19 @@ public class ObjectHelper {
     public static <T> Class<T> getActualListType(Field list) {
         ParameterizedType listType = (ParameterizedType) list.getGenericType();
         return (Class<T>) listType.getActualTypeArguments()[0];
+    }
+
+    /**
+     * this function retrieve the class type object corresponding to the string parameter
+     * @param className the full name of the class, package name included
+     * @return a class type
+     */
+    public static <T> Class<T> getClassFromName(String className) {
+        try {
+            return (Class<T>)Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 
     public static <T, U> ContentValues getEntityContentValues(String jsonDb, T entity) {

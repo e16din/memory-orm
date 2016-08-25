@@ -1,15 +1,15 @@
-package no.hyper.memoryorm;
+package no.hyper.memoryorm.Helper;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.model.Column;
 
 /**

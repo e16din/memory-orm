@@ -13,6 +13,9 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.hyper.memoryorm.Helper.OperationHelper;
+import no.hyper.memoryorm.Helper.TableHelper;
+
 /**
  * Created by jean on 13.06.2016.
  */

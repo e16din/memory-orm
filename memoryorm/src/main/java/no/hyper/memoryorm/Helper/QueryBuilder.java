@@ -1,4 +1,4 @@
-package no.hyper.memoryorm;
+package no.hyper.memoryorm.Helper;
 
 import java.util.ArrayList;
 import java.util.List;

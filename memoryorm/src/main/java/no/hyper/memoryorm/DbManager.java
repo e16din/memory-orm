@@ -51,23 +51,45 @@ public class DbManager extends SQLiteOpenHelper {
     }
 
     public Cursor rawQuery(String request, String[] args) {
-        return db.rawQuery(request, args);
+        if (db != null && db.isOpen()) {
+            return db.rawQuery(request, args);
+        } else {
+            return null;
+        }
     }
 
     public void execute(String request) {
-        db.execSQL(request);
+        if (db != null && db.isOpen()) {
+            db.execSQL(request);
+        }
     }
 
     public long insert(String tableName, ContentValues values) {
-        return db.insert(tableName, null, values);
+        try {
+            if (db != null && db.isOpen()) {
+                return db.insert(tableName, null, values);
+            } else {
+                return 0;
+            }
+        } catch (IllegalStateException error) {
+            return -1;
+        }
     }
 
     public int update(String tableName, ContentValues values, String id) {
-        return db.update(tableName, values, "id='" + id + "'", null);
+        if (db != null && db.isOpen()) {
+            return db.update(tableName, values, "id='" + id + "'", null);
+        } else {
+            return 0;
+        }
     }
 
     public int delete(String tableName, String clause) {
-        return db.delete(tableName, clause, null);
+        if (db != null && db.isOpen()) {
+            return db.delete(tableName, clause, null);
+        } else {
+            return 0;
+        }
     }
 
 }

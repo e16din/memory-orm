@@ -1,24 +1,34 @@
 package no.hyper.memoryorm;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import no.hyper.memoryorm.Helper.OperationHelper;
+import no.hyper.memoryorm.Helper.TableHelper;
+import no.hyper.memoryorm.service.FetchInBackground;
 
 /**
  * Created by Jean on 5/12/2016.
  */
 public class Memory {
 
+    public static final String JSON_DB = "memory_json_db";
+
     private static final String LOG_TAG = Memory.class.getSimpleName();
     private DbManager db;
     private TableHelper tableHelper;
     private OperationHelper operationHelper;
     private String jsonDb;
+    private Context context;
 
     public Memory(Context context, String jsonDb) {
         this.jsonDb = jsonDb;
+        this.context = context;
         db = new DbManager(context, context.getPackageName(), null, 1);
         tableHelper = new TableHelper(db, jsonDb);
         operationHelper = new OperationHelper(db);
@@ -104,6 +114,19 @@ public class Memory {
         T entity = operationHelper.fetchFirst(jsonDb, entityToFetch, null);
         db.closeDb();
         return entity;
+    }
+
+    /**
+     * fetch in background the first element of a table and return it through a broadcast receiver
+     * @param tableName the name of the table to retrieve the element from
+     */
+    public void fetchFirstInBackground(String tableName) {
+        Intent intentService = new Intent(context, FetchInBackground.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(FetchInBackground.CLASS_NAME, tableName);
+        bundle.putString(JSON_DB, jsonDb);
+        intentService.putExtras(bundle);
+        context.startService(intentService);
     }
 
     /**

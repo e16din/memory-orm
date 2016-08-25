@@ -1,5 +1,6 @@
-package no.hyper.memoryorm;
+package no.hyper.memoryorm.Helper;
 
+import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.model.Column;
 import no.hyper.memoryorm.model.Table;
 

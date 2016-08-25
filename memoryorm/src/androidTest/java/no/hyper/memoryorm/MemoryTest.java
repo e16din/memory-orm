@@ -13,6 +13,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import no.hyper.memoryorm.Helper.SchemaHelper;
 import no.hyper.memoryorm.model.Table;
 
 /**

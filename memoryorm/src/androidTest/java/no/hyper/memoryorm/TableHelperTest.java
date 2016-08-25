@@ -5,8 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.test.InstrumentationRegistry;
 
-import com.google.gson.Gson;
-
 import junit.framework.Assert;
 
 import org.junit.After;
@@ -15,7 +13,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import no.hyper.memoryorm.model.Database;
+import no.hyper.memoryorm.Helper.TableHelper;
 
 /**
  * Created by Jean on 5/31/2016.

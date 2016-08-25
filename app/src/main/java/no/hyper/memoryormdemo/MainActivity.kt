@@ -1,14 +1,23 @@
 package no.hyper.memoryormdemo
 
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcelable
+import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import no.hyper.memoryorm.Memory
+import no.hyper.memoryorm.broadcastReceiver.FetchListener
+import no.hyper.memoryorm.broadcastReceiver.FetchReceiver
+import no.hyper.memoryorm.service.FetchInBackground
+import no.hyper.memoryormdemo.model.OpeningHour
+import no.hyper.memoryormdemo.model.Store
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), FetchListener {
 
     val LOG_TAG = this.javaClass.simpleName
 
@@ -28,8 +37,14 @@ class MainActivity : AppCompatActivity() {
 
         memory.save(store)
 
-        val check = memory.fetchAll(Store::class.java)
-        Log.e(LOG_TAG, check.toString())
+        val intentFilter = IntentFilter(FetchInBackground.BROADCAST_ACTION)
+        LocalBroadcastManager.getInstance(this).registerReceiver(FetchReceiver(this), intentFilter)
+
+        memory.fetchFirstInBackground(Store::class.java.name)
+    }
+
+    override fun onFetched(className: String?, parcel: Parcelable?) {
+        Log.d(LOG_TAG, parcel.toString())
     }
 
     fun getDatabase() : String {
