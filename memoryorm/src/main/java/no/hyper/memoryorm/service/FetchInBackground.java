@@ -6,15 +6,10 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.gson.Gson;
-
-import org.json.JSONObject;
-
 import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.Helper.ObjectHelper;
 import no.hyper.memoryorm.Helper.OperationHelper;
 import no.hyper.memoryorm.Memory;
-
 /**
  * Created by jean on 25.08.2016.
  */
@@ -41,7 +36,7 @@ public class FetchInBackground <T> extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        DbManager db = new DbManager(this, getPackageName(), null, 1);
+        DbManager db = DbManager.getInstance(this, getPackageName(), null, 1);
         OperationHelper operationHelper = new OperationHelper(db);
         db.openDb();
         Class<T> classType = ObjectHelper.getClassFromName(className);

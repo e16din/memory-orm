@@ -29,7 +29,7 @@ public class Memory {
     public Memory(Context context, String jsonDb) {
         this.jsonDb = jsonDb;
         this.context = context;
-        db = new DbManager(context, context.getPackageName(), null, 1);
+        db = DbManager.getInstance(context, context.getPackageName(), null, 1);
         tableHelper = new TableHelper(db, jsonDb);
         operationHelper = new OperationHelper(db);
     }

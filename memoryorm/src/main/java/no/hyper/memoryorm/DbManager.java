@@ -14,6 +14,7 @@ public class DbManager extends SQLiteOpenHelper {
 
     private final static String LOG_TAG = DbManager.class.getSimpleName();
     private SQLiteDatabase db;
+    private static DbManager instance;
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -30,13 +31,24 @@ public class DbManager extends SQLiteOpenHelper {
         onUpgrade(db, oldVersion, newVersion);
     }
 
-    public DbManager(Context context, String dbName, SQLiteDatabase.CursorFactory factory, int version) {
+    private DbManager(Context context, String dbName, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, dbName, factory, version);
+    }
+
+    public static DbManager getInstance(Context context, String dbName, SQLiteDatabase.CursorFactory factory,
+                                        int version) {
+        if (instance == null) {
+            instance = new DbManager(context, dbName, factory, version);
+        }
+        return instance;
     }
 
     public void openDb() {
         if (db == null || !db.isOpen()) {
-            db = this.getWritableDatabase();
+            try {
+                while (db.isDbLockedByCurrentThread())
+                db = this.getWritableDatabase();
+            } catch (NullPointerException e) {}
         }
     }
 
