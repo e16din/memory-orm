@@ -3,18 +3,18 @@ package no.hyper.memoryorm.broadcastReceiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Parcelable;
 
 import no.hyper.memoryorm.service.FetchInBackground;
+import no.hyper.memoryorm.service.WriteInBackground;
 
 /**
- * Created by jean on 25.08.2016.
+ * Created by jean on 30.08.2016.
  */
-public class FetchReceiver extends BroadcastReceiver {
+public class WriteReceiver extends BroadcastReceiver {
 
-    private FetchListener listener;
+    private WriteListener listener;
 
-    public FetchReceiver(FetchListener listener) {
+    public WriteReceiver(WriteListener listener) {
         this.listener = listener;
     }
 
@@ -25,11 +25,11 @@ public class FetchReceiver extends BroadcastReceiver {
         Object result;
 
         if (isList) {
-            result = intent.getParcelableArrayExtra(FetchInBackground.PARCELABLE);
+            result = intent.getLongArrayExtra(WriteInBackground.ROW_ID);
         } else {
-            result = intent.getParcelableExtra(FetchInBackground.PARCELABLE);
+            result = intent.getLongExtra(WriteInBackground.ROW_ID, -1);
         }
-        listener.onFetched(className, isList, result);
+        listener.onWrote(className, isList, result);
     }
 
 }

@@ -67,7 +67,7 @@ public class TableHelperTest {
     @Before
     public void start() {
         context = InstrumentationRegistry.getContext();
-        manager = new DbManager(context, DB_NAME, null, 1);
+        manager = DbManager.getInstance(context, DB_NAME, null, 1);
         tableHelper = new TableHelper(manager, JSON_DB);
         manager.openDb();
     }

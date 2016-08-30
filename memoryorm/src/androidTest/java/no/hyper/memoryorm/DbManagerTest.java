@@ -31,7 +31,7 @@ public class DbManagerTest {
     @BeforeClass
     public static void classSetUp() {
         context = InstrumentationRegistry.getContext();
-        manager = new DbManager(context, DB_NAME, null, 1);
+        manager = DbManager.getInstance(context, DB_NAME, null, 1);
         manager.execute("create table " + TABLE_NAME + " (id integer primary key, name text)");
     }
 

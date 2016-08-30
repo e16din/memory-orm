@@ -174,15 +174,15 @@ public class OperationHelper {
      * @param jsonDb the jsonString representing the database
      * @param entity the object to update
      * @param <T>
-     * @return true if it worked otherwise false
+     * @return the number of row affected
      */
-    public <T> boolean update(String jsonDb, T entity) {
+    public <T> long update(String jsonDb, T entity) {
         String id = getEntityId(entity);
         if (id != "-1") {
             long number = update(jsonDb, entity, id);
-            return number > 0;
+            return number;
         } else {
-            return false;
+            return 0;
         }
     }
 

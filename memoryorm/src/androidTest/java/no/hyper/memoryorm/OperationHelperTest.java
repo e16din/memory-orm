@@ -69,7 +69,7 @@ public class OperationHelperTest {
     @Before
     public void start() throws Exception {
         context = InstrumentationRegistry.getContext();
-        manager = new DbManager(context, DB_NAME, null, 1);
+        manager = DbManager.getInstance(context, DB_NAME, null, 1);
         tableHelper = new TableHelper(manager, JSON_DB);
         operationHelper = new OperationHelper(manager);
         manager.openDb();

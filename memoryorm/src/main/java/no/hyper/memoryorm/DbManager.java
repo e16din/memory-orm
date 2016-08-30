@@ -46,7 +46,6 @@ public class DbManager extends SQLiteOpenHelper {
     public void openDb() {
         if (db == null || !db.isOpen()) {
             try {
-                while (db.isDbLockedByCurrentThread())
                 db = this.getWritableDatabase();
             } catch (NullPointerException e) {}
         }
