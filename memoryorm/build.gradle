@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 24
-        versionCode 23
-        versionName "0.4.1"
+        versionCode 25
+        versionName "0.4.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -45,7 +45,7 @@ ext {
     artifact = 'memoryorm'
 
     libraryDescription = 'This library is an ORM for android developed in Java with kotlin usage in mind'
-    libraryVersion = '0.4.1'
+    libraryVersion = '0.4.3'
 
     developerId = 'jeantuffier'
     developerName = 'Jean Tuffier'

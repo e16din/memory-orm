@@ -4,7 +4,8 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import no.hyper.memoryorm.annotation.MemoryIgnore
-import java.util.*
+import no.hyper.memoryormdemo.customReadList
+import no.hyper.memoryormdemo.customReadParcelableArray
 
 /**
  * Created by Jean on 8/4/2016.
@@ -17,8 +18,8 @@ data class Store (
         @SerializedName("phone") val phone: String,
         @SerializedName("url") val url: String,
         @SerializedName("zip-code") val zipCode: String,
-        @SerializedName("opening-hours") val openingHours: List<OpeningHour>,
         @SerializedName("departments") val departments: List<String>,
+        @SerializedName("opening-hour") val openingHours: List<OpeningHour>,
         @SerializedName("country-code") val countryCode: String,
         @SerializedName("country-name") val countryName: String,
         @SerializedName("lng") val lng: String,
@@ -37,27 +38,20 @@ data class Store (
         }
     }
 
-    constructor(parcel: Parcel) : this (
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString(),
-            mutableListOf<OpeningHour>(),
-            mutableListOf<String>(),
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString(),
-            parcel.readString()) {
-        parcel.readTypedList(openingHours, OpeningHour.CREATOR)
-        parcel.readList(departments,String::class.java.classLoader)
-    }
-
-    fun getFilter() : String {
-        return "$name $address $city $phone $url $zipCode $lng $lat"
-    }
+    constructor(parcel: Parcel) : this(
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.customReadList<String>(String::class.java.classLoader),
+        parcel.customReadParcelableArray(OpeningHour::class.java.classLoader),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString())
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id)
@@ -67,10 +61,10 @@ data class Store (
         parcel.writeString(phone)
         parcel.writeString(url)
         parcel.writeString(zipCode)
-        parcel.writeTypedList(openingHours)
         parcel.writeList(departments)
-        parcel.writeString(zipCode)
-        parcel.writeString(zipCode)
+
+        val array : Array<OpeningHour> = openingHours.toTypedArray()
+        parcel.writeParcelableArray(array, 0)
         parcel.writeString(countryCode)
         parcel.writeString(countryName)
         parcel.writeString(lng)

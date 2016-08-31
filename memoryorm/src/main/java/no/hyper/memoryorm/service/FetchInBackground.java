@@ -11,6 +11,7 @@ import java.util.List;
 import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.Helper.ObjectHelper;
 import no.hyper.memoryorm.Helper.OperationHelper;
+import no.hyper.memoryorm.Helper.SchemaHelper;
 import no.hyper.memoryorm.Memory;
 /**
  * Created by jean on 25.08.2016.
@@ -18,7 +19,7 @@ import no.hyper.memoryorm.Memory;
 public class FetchInBackground <T> extends IntentService {
 
     public static final String CLASS_NAME = "no.hyper.memoryorm.CLASS_NAME";
-    public static final String BROADCAST_ACTION = "no.hyper.memoryorm.BROADCAST";
+    public static final String BROADCAST_ACTION_FETCH = "no.hyper.memoryorm.BROADCAST_FETCH";
     public static final String PARCELABLE = "no.hyper.memoryorm.PARCELABLE";
     public static final String FETCH_ACTION = "no.hyper.memoryorm.FETCH_ACTION";
     public static final String ID = "no.hyper.memoryorm.ID";
@@ -45,7 +46,7 @@ public class FetchInBackground <T> extends IntentService {
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
         Bundle extras = intent.getExtras();
-        jsonDb = extras.getString(Memory.JSON_DB);
+        jsonDb = SchemaHelper.getInstance().getDatabase(this);
         className = extras.getString(CLASS_NAME);
         action = Action.valueOf(extras.getString(FETCH_ACTION));
         id = extras.getString(ID);
@@ -84,6 +85,8 @@ public class FetchInBackground <T> extends IntentService {
 
     private Parcelable[] fetchAll(OperationHelper operationHelper, String jsonDb, Class<T> classType, String condition) {
         List<T> result = operationHelper.fetchAll(jsonDb, classType, condition);
+        if (result == null) return null;
+
         Parcelable[] parcelables = new Parcelable[result.size()];
         for(int i = 0; i < parcelables.length; i++) {
             parcelables[i] = (Parcelable)result.get(i);
@@ -92,7 +95,7 @@ public class FetchInBackground <T> extends IntentService {
     }
 
     private void sendResult(Parcelable parcelable) {
-        Intent result = new Intent(BROADCAST_ACTION);
+        Intent result = new Intent(BROADCAST_ACTION_FETCH);
         result.putExtra(PARCELABLE, parcelable);
         result.putExtra(CLASS_NAME, className);
         result.putExtra(IS_LIST, false);
@@ -100,7 +103,7 @@ public class FetchInBackground <T> extends IntentService {
     }
 
     private void sendArrayResult(Parcelable[] parcelables) {
-        Intent result = new Intent(BROADCAST_ACTION);
+        Intent result = new Intent(BROADCAST_ACTION_FETCH);
         result.putExtra(PARCELABLE, parcelables);
         result.putExtra(CLASS_NAME, className);
         result.putExtra(IS_LIST, true);

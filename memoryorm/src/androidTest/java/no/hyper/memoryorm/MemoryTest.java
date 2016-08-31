@@ -115,7 +115,7 @@ public class MemoryTest {
     @Before
     public void start() throws Exception {
         context = InstrumentationRegistry.getContext();
-        memory = new Memory(context, JSON_DB);
+        memory = new Memory(context);
     }
 
     @After

@@ -11,18 +11,20 @@ import java.util.List;
 
 import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.Helper.OperationHelper;
-import no.hyper.memoryorm.Memory;
+import no.hyper.memoryorm.Helper.SchemaHelper;
 
 /**
  * Created by jean on 30.08.2016.
  */
-public class WriteInBackground<T> extends IntentService {
+public class WriteInBackground extends IntentService {
+
+    private final String LOG_TAG = this.className;
 
     public static final String CLASS_NAME = "no.hyper.memoryorm.CLASS_NAME";
-    public static final String BROADCAST_ACTION = "no.hyper.memoryorm.BROADCAST";
+    public static final String BROADCAST_ACTION_WRITE = "no.hyper.memoryorm.BROADCAST_WRITE";
     public static final String ROW_ID = "no.hyper.memoryorm.ROW_ID";
     public static final String IS_LIST = "no.hyper.memoryorm.IS_LIST";
-    public static final String WRITE_ACTION = "no.hyper.memoryorm.SAVE_ACTION";
+    public static final String WRITE_ACTION = "no.hyper.memoryorm.WRITE_ACTION";
     public static final String ENTITY = "no.hyper.memoryorm.ENTITY";
     public static final String LIST_ENTITY = "no.hyper.memoryorm.LIST_ENTITY";
 
@@ -35,8 +37,8 @@ public class WriteInBackground<T> extends IntentService {
 
     private String jsonDb;
     private Action action;
-    private T entity;
-    private List<T> entities = new ArrayList<>();
+    private Parcelable entity;
+    private List<Parcelable> entities = new ArrayList<>();
     private String className;
 
     public WriteInBackground() {
@@ -50,16 +52,23 @@ public class WriteInBackground<T> extends IntentService {
         db = DbManager.getInstance(this, getPackageName(), null, 1);
         operationHelper = new OperationHelper(db);
 
-        Bundle extras = intent.getExtras();
-        jsonDb = extras.getString(Memory.JSON_DB);
-        action = Action.valueOf(extras.getString(WRITE_ACTION));
-        entity = extras.getParcelable(ENTITY);
-        className = extras.getParcelable(CLASS_NAME);
+        try {
+            Bundle extras = intent.getExtras();
+            jsonDb = SchemaHelper.getInstance().getDatabase(this);
+            className = extras.getString(CLASS_NAME);
+            action = Action.valueOf(extras.getString(WRITE_ACTION));
+            entity = extras.getParcelable(ENTITY);
 
-        Parcelable[] parcelables = extras.getParcelableArray(LIST_ENTITY);
-        for( int i = 0; i < parcelables.length; i++) {
-            entities.add((T)parcelables[i]);
+            Parcelable[] parcelables = extras.getParcelableArray(LIST_ENTITY);
+            if (parcelables != null) {
+                for( int i = 0; i < parcelables.length; i++) {
+                    entities.add(parcelables[i]);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
     @Override
@@ -78,6 +87,7 @@ public class WriteInBackground<T> extends IntentService {
     }
 
     private Long save() {
+        if (entity == null) return Long.valueOf(0);
         return operationHelper.insert(jsonDb, entity, null);
     }
 
@@ -102,7 +112,7 @@ public class WriteInBackground<T> extends IntentService {
     }
 
     private void sendResult(Long id) {
-        Intent result = new Intent(BROADCAST_ACTION);
+        Intent result = new Intent(BROADCAST_ACTION_WRITE);
         result.putExtra(ROW_ID, id);
         result.putExtra(IS_LIST, false);
         result.putExtra(CLASS_NAME, className);
@@ -110,7 +120,7 @@ public class WriteInBackground<T> extends IntentService {
     }
 
     private void sendArrayResult(Long[] ids) {
-        Intent result = new Intent(BROADCAST_ACTION);
+        Intent result = new Intent(BROADCAST_ACTION_WRITE);
         result.putExtra(ROW_ID, ids);
         result.putExtra(IS_LIST, true);
         result.putExtra(CLASS_NAME, className);

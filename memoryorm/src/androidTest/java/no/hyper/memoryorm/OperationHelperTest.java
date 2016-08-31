@@ -175,9 +175,9 @@ public class OperationHelperTest {
         Assert.assertEquals("group1", group.id);
 
         group.name = "test";
-        boolean worked = operationHelper.update(JSON_DB, group);
+        long worked = operationHelper.update(JSON_DB, group);
 
-        Assert.assertEquals(true, worked);
+        Assert.assertTrue(worked > 0);
 
         groups = operationHelper.fetchAll(JSON_DB, PersonGroup.class, "name='test'");
         Assert.assertEquals(1, groups.size());

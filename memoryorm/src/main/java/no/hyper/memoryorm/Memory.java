@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.hyper.memoryorm.Helper.OperationHelper;
+import no.hyper.memoryorm.Helper.SchemaHelper;
 import no.hyper.memoryorm.Helper.TableHelper;
 import no.hyper.memoryorm.broadcastReceiver.FetchListener;
 import no.hyper.memoryorm.broadcastReceiver.FetchReceiver;
@@ -25,23 +26,24 @@ import no.hyper.memoryorm.service.WriteInBackground;
  */
 public class Memory {
 
-    public static final String JSON_DB = "memory_json_db";
-
     private static final String LOG_TAG = Memory.class.getSimpleName();
     private DbManager db;
     private TableHelper tableHelper;
     private OperationHelper operationHelper;
     private String jsonDb;
     private Context context;
-    private IntentFilter intentFilter;
+    private IntentFilter intentFilterFetch;
+    private IntentFilter intentFilterWrite;
 
-    public Memory(Context context, String jsonDb) {
-        this.jsonDb = jsonDb;
+    public Memory(Context context) {
+        this.jsonDb = SchemaHelper.getInstance().getDatabase(context);
         this.context = context;
         db = DbManager.getInstance(context, context.getPackageName(), null, 1);
+
         tableHelper = new TableHelper(db, jsonDb);
         operationHelper = new OperationHelper(db);
-        intentFilter = new IntentFilter(FetchInBackground.BROADCAST_ACTION);
+        intentFilterFetch = new IntentFilter(FetchInBackground.BROADCAST_ACTION_FETCH);
+        intentFilterWrite = new IntentFilter(WriteInBackground.BROADCAST_ACTION_WRITE);
     }
 
     /**
@@ -108,8 +110,23 @@ public class Memory {
         setWriteBroadcast(writeListener);
         Intent intentService = new Intent(context, WriteInBackground.class);
         Bundle bundle = new Bundle();
-        bundle.putString(JSON_DB, jsonDb);
         bundle.putParcelable(WriteInBackground.ENTITY, parcelable);
+        bundle.putString(WriteInBackground.CLASS_NAME, parcelable.getClass().getSimpleName());
+        bundle.putString(WriteInBackground.WRITE_ACTION, WriteInBackground.Action.save.toString());
+        intentService.putExtras(bundle);
+        context.startService(intentService);
+    }
+
+    /**
+     * save in background the elements
+     * @param parcelables the list of object to save
+     */
+    public void saveInBackground(WriteListener writeListener, Parcelable[] parcelables) {
+        setWriteBroadcast(writeListener);
+        Intent intentService = new Intent(context, WriteInBackground.class);
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArray(WriteInBackground.LIST_ENTITY, parcelables);
+        bundle.putString(WriteInBackground.CLASS_NAME, parcelables.getClass().getSimpleName());
         bundle.putString(WriteInBackground.WRITE_ACTION, WriteInBackground.Action.save.toString());
         intentService.putExtras(bundle);
         context.startService(intentService);
@@ -178,7 +195,6 @@ public class Memory {
         setFetchBroadcast(fetchListener);
         Intent intentService = new Intent(context, FetchInBackground.class);
         Bundle bundle = new Bundle();
-        bundle.putString(JSON_DB, jsonDb);
         bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchFirst.toString());
         bundle.putString(FetchInBackground.CLASS_NAME, tableName);
         bundle.putString(FetchInBackground.CONDITION, condition);
@@ -195,7 +211,6 @@ public class Memory {
         setFetchBroadcast(fetchListener);
         Intent intentService = new Intent(context, FetchInBackground.class);
         Bundle bundle = new Bundle();
-        bundle.putString(JSON_DB, jsonDb);
         bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchAll.toString());
         bundle.putString(FetchInBackground.CLASS_NAME, tableName);
         bundle.putString(FetchInBackground.CONDITION, condition);
@@ -212,7 +227,6 @@ public class Memory {
         setFetchBroadcast(fetchListener);
         Intent intentService = new Intent(context, FetchInBackground.class);
         Bundle bundle = new Bundle();
-        bundle.putString(JSON_DB, jsonDb);
         bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchById.toString());
         bundle.putString(FetchInBackground.CLASS_NAME, tableName);
         bundle.putString(FetchInBackground.ID, id);
@@ -229,7 +243,6 @@ public class Memory {
         setFetchBroadcast(fetchListener);
         Intent intentService = new Intent(context, FetchInBackground.class);
         Bundle bundle = new Bundle();
-        bundle.putString(JSON_DB, jsonDb);
         bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchById.toString());
         bundle.putString(FetchInBackground.CLASS_NAME, tableName);
         bundle.putLong(FetchInBackground.ROW_ID, rowId);
@@ -315,12 +328,12 @@ public class Memory {
 
     private void setFetchBroadcast(FetchListener fetchListener) {
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(context);
-        localBroadcastManager.registerReceiver(new FetchReceiver(fetchListener), intentFilter);
+        localBroadcastManager.registerReceiver(new FetchReceiver(fetchListener), intentFilterFetch);
     }
 
     private void setWriteBroadcast(WriteListener writeListener) {
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(context);
-        localBroadcastManager.registerReceiver(new WriteReceiver(writeListener), intentFilter);
+        localBroadcastManager.registerReceiver(new WriteReceiver(writeListener), intentFilterWrite);
     }
 
 }

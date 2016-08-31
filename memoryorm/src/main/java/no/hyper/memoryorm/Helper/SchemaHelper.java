@@ -1,6 +1,13 @@
 package no.hyper.memoryorm.Helper;
 
+import android.content.Context;
+
 import com.google.gson.Gson;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import no.hyper.memoryorm.model.Database;
 import no.hyper.memoryorm.model.Table;
@@ -36,6 +43,27 @@ public class SchemaHelper {
             }
         }
         return null;
+    }
+
+    public String getDatabase(Context context) {
+        try {
+            InputStream inputStream = context.getAssets().open("schema/database.json");
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            StringBuilder sb = new StringBuilder();
+
+            String line;
+            do {
+                line = reader.readLine();
+                if (line != null) sb.append(line);
+            } while (line != null);
+
+            reader.close();
+            return sb.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }
