@@ -155,6 +155,6 @@ memory.update(name)
 
 Finally, in the case you don't know if an item does not exists in your DB, you can use the `saveOrUpdate` method that check if an item with the same id exists. (Your table need to declare explicitely an id field for this to work)
 
-## under development
+## Under development
 
 The code base is constantly under improvement, and new features are still to come. For now, writing and fetching in a different thread is under development. You can look into the methods `saveInBackground()` and `fetch...InBackground()`
