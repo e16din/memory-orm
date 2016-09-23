@@ -12,6 +12,7 @@ public class Column {
     private String type;
     private boolean primary = false;
     private boolean list = false;
+    private boolean custom = false;
 
     @SerializedName("foreign_key")
     private boolean foreignKey = false;
@@ -55,4 +56,13 @@ public class Column {
     public void setForeignKey(boolean foreignKey) {
         this.foreignKey = foreignKey;
     }
+
+    public boolean isCustom() {
+        return custom;
+    }
+
+    public void setCustom(boolean custom) {
+        this.custom = custom;
+    }
+
 }

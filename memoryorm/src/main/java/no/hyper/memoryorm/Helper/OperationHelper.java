@@ -1,4 +1,4 @@
-package no.hyper.memoryorm.Helper;
+package no.hyper.memoryorm.helper;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -254,35 +254,45 @@ public class OperationHelper {
 
     private <T, U> T getEntity(String jsonDb, Class<T> classType, Cursor cursor) {
         T entity = EntityBuilder.bindCursorToEntity(jsonDb, classType, cursor);
-        for (Field field : ObjectHelper.getDeclaredFields(classType)) {
-            if (ObjectHelper.isAList(field)) {
-                if (ObjectHelper.isCustomType(ObjectHelper.getActualListType(field).getSimpleName())) {
-                    try {
-                        int rowIdIdx = cursor.getColumnIndex("rowid");
-                        if (rowIdIdx == -1) continue;
-                        long id = cursor.getLong(rowIdIdx);
-                        List<U> list = (List<U>)fetchAll(jsonDb, ObjectHelper.getActualListType(field),
-                                "id_" + classType.getSimpleName() + "=" + String.valueOf(id));
-                        field.setAccessible(true);
-                        field.set(entity, list);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else if (!ObjectHelper.isAList(field) &&
-                    ObjectHelper.isCustomType(field.getType().getSimpleName())) {
+
+        for (Column column : SchemaHelper.getInstance().getTable(jsonDb, classType.getSimpleName()).getColumns()) {
+            if (column.isList() && column.isCustom()) {
                 try {
-                    int idx = cursor.getColumnIndex(field.getName());
+                    int rowIdIdx = cursor.getColumnIndex("rowid");
+                    if (rowIdIdx == -1) continue;
+                    long id = cursor.getLong(rowIdIdx);
+                    Field field = getFieldFromEntity(entity, column.getLabel());
+                    List<U> list = (List<U>)fetchAll(jsonDb, ObjectHelper.getActualListType(field),
+                            "id_" + classType.getSimpleName() + "=" + String.valueOf(id));
+                    field.set(entity, list);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            } else if (!column.isList() && column.isCustom()) {
+                try {
+                    int idx = cursor.getColumnIndex(column.getLabel());
                     long rowId = cursor.getLong(idx);
+                    Field field = getFieldFromEntity(entity, column.getLabel());
                     U object = (U)fetchFirst(jsonDb, field.getType(), "ROWID="+rowId);
-                    field.setAccessible(true);
                     field.set(entity, object);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
         }
+
         return entity;
+    }
+
+    private <T> Field getFieldFromEntity(T entity, String fieldName) {
+        try {
+            Field field = entity.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field;
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private <T> long update(String jsonDb, T entity, String id) {

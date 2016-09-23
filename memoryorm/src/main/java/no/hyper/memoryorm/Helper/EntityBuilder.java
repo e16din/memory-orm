@@ -1,4 +1,4 @@
-package no.hyper.memoryorm.Helper;
+package no.hyper.memoryorm.helper;
 
 import android.database.Cursor;
 
@@ -65,14 +65,13 @@ public class EntityBuilder {
     }
 
     /**
-     * return an object of type T binded with the values of the cursor passed.
-     * @param classType: The type of the object that will be return.
+     * return a map based on the content of the cursor.
+     * @param tableName: The name of the table where the cursor got the data.
      * @param cursor: cursor containing the values for the entity.
-     * @param <T>
      */
-    public static <T> HashMap<String, Object> bindCursorToHashMap(String jsonDb, Class<T> classType, Cursor cursor) {
+    public static HashMap<String, Object> bindCursorToHashMap(String jsonDb, String tableName, Cursor cursor) {
         HashMap<String, Object> map = new HashMap<>();
-        Table table = SchemaHelper.getInstance().getTable(jsonDb, classType.getSimpleName());
+        Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
 
         for (Column column : table.getColumns()) {
             int index = cursor.getColumnIndex(column.getLabel());
@@ -107,13 +106,13 @@ public class EntityBuilder {
     }
 
     /**
-     * return an object of type T binded with the values present in the cursor
-     * @param classType: The type of the object that will be return.
+     * return an object of type T binded with the values present in the cursor.
+     * @param classType: The type of the class to retrieve.
      * @param cursor: cursor containing the values for the entity.
      * @param <T>
      */
     public static <T> T bindCursorToEntity(String jsonDb, Class<T> classType, Cursor cursor) {
-        HashMap<String, Object> map = bindCursorToHashMap(jsonDb, classType, cursor);
+        HashMap<String, Object> map = bindCursorToHashMap(jsonDb, classType.getSimpleName(), cursor);
         T entity = null;
         try {
             Constructor[] constructors = classType.getDeclaredConstructors();

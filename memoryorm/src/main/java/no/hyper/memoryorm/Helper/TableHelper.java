@@ -1,4 +1,4 @@
-package no.hyper.memoryorm.Helper;
+package no.hyper.memoryorm.helper;
 
 import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.model.Column;
@@ -33,14 +33,14 @@ public class TableHelper {
         StringBuilder content = new StringBuilder();
         content.append("(");
         for (Column column : table.getColumns()) {
-            if (!column.isList() && ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+            if (!column.isList() && column.isCustom()) {
                 content.append(column.getLabel());
                 createTable(SchemaHelper.getInstance().getTable(jsonDb, column.getType()));
                 content.append(" integer,");
-            } else if (column.isList() && !ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+            } else if (column.isList() && !column.isCustom()) {
                 content.append(column.getLabel());
                 content.append(" text,");
-            } else if (!column.isList() && !ObjectHelper.isCustomType(ObjectHelper.getEquivalentJavaType(column.getType()))) {
+            } else if (!column.isList() && !column.isCustom()) {
                 content.append(column.getLabel());
                 content.append(" ");
                 content.append(column.getType());

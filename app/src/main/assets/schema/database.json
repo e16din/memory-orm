@@ -51,10 +51,12 @@
     }, {
       "label": "gear",
       "type": "Gear",
+      "custom": true,
       "list": true
     }, {
       "label": "house",
-      "type": "House"
+      "type": "House",
+      "custom": true
     }]
   }, {
     "name": "Store",
@@ -83,6 +85,7 @@
     }, {
       "label": "openingHours",
       "type": "OpeningHour",
+      "custom": true,
       "list": true
     }, {
       "label": "departments",

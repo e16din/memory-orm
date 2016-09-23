@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import no.hyper.memoryorm.Helper.TableHelper;
+import no.hyper.memoryorm.helper.TableHelper;
 
 /**
  * Created by Jean on 5/31/2016.

@@ -10,7 +10,7 @@ import no.hyper.memoryorm.broadcastReceiver.WriteListener
 import no.hyper.memoryormdemo.model.OpeningHour
 import no.hyper.memoryormdemo.model.Store
 
-class MainActivity : AppCompatActivity(), FetchListener, WriteListener {
+class MainActivity : AppCompatActivity() {
 
     val LOG_TAG = this.javaClass.simpleName
 
@@ -29,30 +29,9 @@ class MainActivity : AppCompatActivity(), FetchListener, WriteListener {
         var store = Store("id1", "store1", "address1", "city1", "phone1", "url1", "zip1", departments, openingHours,
                 "code1", "name1", "lgn1", "lat1")
 
-        memory.saveInBackground(this, store)
-    }
-
-    override fun onFetched(className: String, isList: Boolean, data: Any) {
-        Log.d(LOG_TAG, className)
-        Log.d(LOG_TAG, isList.toString())
-
-        if (isList) {
-            Log.d(LOG_TAG, "fetched data: " + (data as Array<Parcelable>).toString())
-        } else {
-            Log.d(LOG_TAG, "fetched data: " + (data as Parcelable).toString())
-        }
-    }
-
-    override fun onWrote(className: String?, isList: Boolean, data: Any?) {
-        Log.d(LOG_TAG, className)
-        Log.d(LOG_TAG, isList.toString())
-
-        if (isList) {
-            Log.d(LOG_TAG, "wrote data: " + (data as Array<Long>).toString())
-        } else {
-            Log.d(LOG_TAG, "wrote data: " + (data as Long).toString())
-        }
-        memory.fetchAllInBackground(this, Store::class.java.name, null)
+        memory.save(store)
+        val fetch = memory.fetchFirst(Store::class.java)
+        Log.d(LOG_TAG, fetch.toString())
     }
 
 }

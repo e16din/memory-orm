@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.hyper.memoryorm.DbManager;
-import no.hyper.memoryorm.Helper.OperationHelper;
-import no.hyper.memoryorm.Helper.SchemaHelper;
+import no.hyper.memoryorm.helper.OperationHelper;
+import no.hyper.memoryorm.helper.SchemaHelper;
 
 /**
  * Created by jean on 30.08.2016.

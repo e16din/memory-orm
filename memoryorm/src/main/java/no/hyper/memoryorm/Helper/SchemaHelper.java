@@ -1,4 +1,4 @@
-package no.hyper.memoryorm.Helper;
+package no.hyper.memoryorm.helper;
 
 import android.content.Context;
 
@@ -46,6 +46,7 @@ public class SchemaHelper {
     }
 
     public String getDatabase(Context context) {
+        if (context == null) return null;
         try {
             InputStream inputStream = context.getAssets().open("schema/database.json");
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);

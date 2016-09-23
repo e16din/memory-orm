@@ -1,4 +1,4 @@
-package no.hyper.memoryorm.Helper;
+package no.hyper.memoryorm.helper;
 
 import android.content.ContentValues;
 
@@ -17,10 +17,6 @@ import no.hyper.memoryorm.model.Table;
  */
 public class ObjectHelper {
 
-    private static String THIS = "this";
-    private static String CHANGE = "change";
-    private static String COMPANION = "Companion";
-
     /**
      * return the list of fields declared in the class without the `this` implicit field
      */
@@ -29,7 +25,7 @@ public class ObjectHelper {
         List<Field> fields = new ArrayList<>();
         outerloop : for(int i = 0; i < all.length; i++) {
             String name = all[i].getName();
-            if (name.contains(THIS) || name.contains(CHANGE) || name.contains(COMPANION)) continue;
+            if (java.lang.reflect.Modifier.isStatic(all[i].getModifiers())) continue;
             Annotation[] annotations = all[i].getDeclaredAnnotations();
             for (Annotation annotation : annotations) {
                 if (annotation.annotationType().equals(MemoryIgnore.class)) {
@@ -43,23 +39,6 @@ public class ObjectHelper {
     }
 
     /**
-     * Return true or false if the field pass as parameter is a custom type
-     * @param classname the name of the class to test
-     * @param <T>
-     * @return true if the class is a custom one, false otherwise
-     */
-    public static <T> boolean isCustomType(String classname) {
-        try {
-            if (classname.equals("boolean") || classname.equals("int")) return false;
-            Class c = Class.forName("java.lang." + classname);
-            if (c.isPrimitive() || c != null) return false;
-            else return true;
-        } catch (Exception e) {
-            return true;
-        }
-    }
-
-    /**
      * return true if the field type is List, else false
      * @param field the field to test
      * @return true if the type of the field is a list, false otherwise
@@ -69,7 +48,7 @@ public class ObjectHelper {
     }
 
     /**
-     * return a list of field for which the type is List
+     * return a list of containing all the list field
      * @param tableName: the class containing the attibutes to test
      * @return a list containing the column that represent a list of custom type
      */
@@ -77,7 +56,7 @@ public class ObjectHelper {
         Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
-            if (column.isList() && isCustomType(getEquivalentJavaType(column.getType()))) {
+            if (column.isList() && column.isCustom()) {
                 columns.add(column);
             }
         }
@@ -93,26 +72,11 @@ public class ObjectHelper {
         Table table = SchemaHelper.getInstance().getTable(jsonDb, tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
-            if (!column.isList() && isCustomType(getEquivalentJavaType(column.getType()))) {
+            if (!column.isList() && column.isCustom()) {
                 columns.add(column);
             }
         }
         return columns;
-    }
-
-    /**
-     * return the equivalent sql type of a java type
-     * @param classType the type to look for an equivalent sql type
-     * @param <T>
-     * @return a string representing the equivalent sql type
-     */
-    public static <T> String getEquivalentSqlType(Class<T> classType) {
-        if (isCustomType(classType.getSimpleName())) return "INTEGER";
-        switch (classType.getSimpleName()) {
-            case "boolean" :
-            case "int": return "INTEGER";
-            default : return "TEXT";
-        }
     }
 
     /**
@@ -163,7 +127,7 @@ public class ObjectHelper {
                 Field field = c.getDeclaredField(column.getLabel());
                 field.setAccessible(true);
                 Object value = field.get(entity);
-                if (value == null || isCustomType(getEquivalentJavaType(column.getType()))) {
+                if (value == null || column.isCustom()) {
                     continue;
                 } else if(column.isList()) {
                     List<U> list = (List<U>)value;

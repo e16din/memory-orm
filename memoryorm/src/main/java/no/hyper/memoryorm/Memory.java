@@ -11,9 +11,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.hyper.memoryorm.Helper.OperationHelper;
-import no.hyper.memoryorm.Helper.SchemaHelper;
-import no.hyper.memoryorm.Helper.TableHelper;
+import no.hyper.memoryorm.helper.OperationHelper;
+import no.hyper.memoryorm.helper.SchemaHelper;
+import no.hyper.memoryorm.helper.TableHelper;
 import no.hyper.memoryorm.broadcastReceiver.FetchListener;
 import no.hyper.memoryorm.broadcastReceiver.FetchReceiver;
 import no.hyper.memoryorm.broadcastReceiver.WriteListener;
