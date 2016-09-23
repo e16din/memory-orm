@@ -7,7 +7,7 @@ With Memory you will be able to use your classic POJO Java classes but also the
 # Gradle
 
 ```
-compile 'no.hyper.memoryorm:memoryorm:0.2.8'
+compile 'no.hyper.memoryorm:memoryorm:0.4.5'
 ```
 
 # Usage
@@ -72,10 +72,12 @@ The library relies on a json description of your database to build it. You need 
     }, {
       "label": "gear",
       "type": "Gear",
+      "custom": true,
       "list": true
     }, {
       "label": "house",
-      "type": "House"
+      "type": "House",
+      "custom": true
     }]
   }]
 }
@@ -111,7 +113,7 @@ Note 2 : An `id` field is not mandatory, Memory uses the `ROWID` field of each r
 The first thing you need to do is instantiating the only object you need to use the library by passing the context and our database description as a String:
 
 ``` kotlin
-val memory = Memory(this, jsonDatabase)
+val memory = Memory(context)
 memory.createTables()
 ```
 
@@ -152,3 +154,7 @@ memory.update(name)
 ```
 
 Finally, in the case you don't know if an item does not exists in your DB, you can use the `saveOrUpdate` method that check if an item with the same id exists. (Your table need to declare explicitely an id field for this to work)
+
+## under development
+
+The code base is constantly under improvement, and new features are still to come. For now, writing and fetching in a different thread is under development. You can look into the methods `saveInBackground()` and `fetch...InBackground()`
