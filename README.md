@@ -83,7 +83,7 @@ The library relies on a json description of your database to build it. You need 
 }
 ```
 
-The file HAS TO be placed like this `asset/schema/database.json`. Of course, you also need to have the corresponding POJO or `data class` object that go with each table described in your json.
+The file HAS TO be placed like this `asset/schema/database.json`. Of course, you also need to have the corresponding POJO or `data class` object that go with each table described in your json. The "type" parameter accept two options : "text" or "integer" based on the type supported by SQLite. So if you have a boolean parameter, the library will use 0 or 1 in the database and convert to false or true accordingly. 
 
 ``` kotlin
 data class Gear (
