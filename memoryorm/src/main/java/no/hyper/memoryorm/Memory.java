@@ -1,25 +1,13 @@
 package no.hyper.memoryorm;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import no.hyper.memoryorm.helper.DatabaseHelper;
 import no.hyper.memoryorm.helper.OperationHelper;
-import no.hyper.memoryorm.helper.SchemaHelper;
-import no.hyper.memoryorm.helper.TableHelper;
-import no.hyper.memoryorm.broadcastReceiver.FetchListener;
-import no.hyper.memoryorm.broadcastReceiver.FetchReceiver;
-import no.hyper.memoryorm.broadcastReceiver.WriteListener;
-import no.hyper.memoryorm.broadcastReceiver.WriteReceiver;
-import no.hyper.memoryorm.service.FetchInBackground;
-import no.hyper.memoryorm.service.WriteInBackground;
 
 /**
  * Created by Jean on 5/12/2016.
@@ -28,22 +16,16 @@ public class Memory {
 
     private static final String LOG_TAG = Memory.class.getSimpleName();
     private DbManager db;
-    private TableHelper tableHelper;
+    private DatabaseHelper tableHelper;
     private OperationHelper operationHelper;
-    private String jsonDb;
     private Context context;
-    private IntentFilter intentFilterFetch;
-    private IntentFilter intentFilterWrite;
 
     public Memory(Context context) {
-        this.jsonDb = SchemaHelper.getInstance().getDatabase(context);
         this.context = context;
         db = DbManager.getInstance(context, context.getPackageName(), null, 1);
 
-        tableHelper = new TableHelper(db, jsonDb);
+        tableHelper = new DatabaseHelper(db, context);
         operationHelper = new OperationHelper(db);
-        intentFilterFetch = new IntentFilter(FetchInBackground.BROADCAST_ACTION_FETCH);
-        intentFilterWrite = new IntentFilter(WriteInBackground.BROADCAST_ACTION_WRITE);
     }
 
     /**
@@ -53,6 +35,13 @@ public class Memory {
         db.openDb();
         tableHelper.createTables();
         db.closeDb();
+    }
+
+    /**
+     * delete the database
+     */
+    public void deleteDb() {
+        context.deleteDatabase(context.getPackageName());
     }
 
     /**
@@ -83,7 +72,7 @@ public class Memory {
      */
     public <T> long save(T entity) {
         db.openDb();
-        long result = operationHelper.insert(jsonDb, entity, null);
+        long result = operationHelper.insert(context, entity, null);
         db.closeDb();
         return result;
     }
@@ -97,39 +86,9 @@ public class Memory {
     public <T> List<Long> save(List<T> list) {
         if (list.size() <= 0) return null;
         db.openDb();
-        List<Long> rows = operationHelper.insert(jsonDb, list, null);
+        List<Long> rows = operationHelper.insert(context, list, null);
         db.closeDb();
         return rows;
-    }
-
-    /**
-     * save in background the element
-     * @param parcelable the object to save
-     */
-    public void saveInBackground(WriteListener writeListener, Parcelable parcelable) {
-        setWriteBroadcast(writeListener);
-        Intent intentService = new Intent(context, WriteInBackground.class);
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(WriteInBackground.ENTITY, parcelable);
-        bundle.putString(WriteInBackground.CLASS_NAME, parcelable.getClass().getSimpleName());
-        bundle.putString(WriteInBackground.WRITE_ACTION, WriteInBackground.Action.save.toString());
-        intentService.putExtras(bundle);
-        context.startService(intentService);
-    }
-
-    /**
-     * save in background the elements
-     * @param parcelables the list of object to save
-     */
-    public void saveInBackground(WriteListener writeListener, Parcelable[] parcelables) {
-        setWriteBroadcast(writeListener);
-        Intent intentService = new Intent(context, WriteInBackground.class);
-        Bundle bundle = new Bundle();
-        bundle.putParcelableArray(WriteInBackground.LIST_ENTITY, parcelables);
-        bundle.putString(WriteInBackground.CLASS_NAME, parcelables.getClass().getSimpleName());
-        bundle.putString(WriteInBackground.WRITE_ACTION, WriteInBackground.Action.save.toString());
-        intentService.putExtras(bundle);
-        context.startService(intentService);
     }
 
     /**
@@ -140,7 +99,7 @@ public class Memory {
      */
     public <T> List<T>  fetchAll(Class<T> classType) {
         db.openDb();
-        List<T> result = operationHelper.fetchAll(jsonDb, classType, null);
+        List<T> result = operationHelper.fetchAll(context, classType, null);
         db.closeDb();
         return result;
     }
@@ -153,7 +112,7 @@ public class Memory {
      */
     public <T> T fetchFirst(Class<T> entityToFetch) {
         db.openDb();
-        T entity = operationHelper.fetchFirst(jsonDb, entityToFetch, null);
+        T entity = operationHelper.fetchFirst(context, entityToFetch, null);
         db.closeDb();
         return entity;
     }
@@ -167,7 +126,7 @@ public class Memory {
      */
     public <T> T fetchById (Class<T> entityToFetch, String id) {
         db.openDb();
-        T result = operationHelper.fetchById(jsonDb, entityToFetch, id);
+        T result = operationHelper.fetchById(context, entityToFetch, id);
         db.closeDb();
         return result;
     }
@@ -181,73 +140,9 @@ public class Memory {
      */
     public <T> T fetchByRowId (Class<T> entityToFetch, Long rowId) {
         db.openDb();
-        T result = operationHelper.fetchByRowId(jsonDb, entityToFetch, rowId);
+        T result = operationHelper.fetchByRowId(context, entityToFetch, rowId);
         db.closeDb();
         return result;
-    }
-
-    /**
-     * fetch in background the first element of a table and return it through a broadcast receiver
-     * @param tableName the name of the table to retrieve the element from
-     * @param  condition a condition to limit the select statement
-     */
-    public void fetchFirstInBackground(FetchListener fetchListener, String tableName, String condition) {
-        setFetchBroadcast(fetchListener);
-        Intent intentService = new Intent(context, FetchInBackground.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchFirst.toString());
-        bundle.putString(FetchInBackground.CLASS_NAME, tableName);
-        bundle.putString(FetchInBackground.CONDITION, condition);
-        intentService.putExtras(bundle);
-        context.startService(intentService);
-    }
-
-    /**
-     * fetch in background all the elements of a table and return them through a broadcast receiver
-     * @param tableName the name of the table to retrieve the element from
-     * @param condition a condition to limit the select statement
-     */
-    public void fetchAllInBackground(FetchListener fetchListener, String tableName, String condition) {
-        setFetchBroadcast(fetchListener);
-        Intent intentService = new Intent(context, FetchInBackground.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchAll.toString());
-        bundle.putString(FetchInBackground.CLASS_NAME, tableName);
-        bundle.putString(FetchInBackground.CONDITION, condition);
-        intentService.putExtras(bundle);
-        context.startService(intentService);
-    }
-
-    /**
-     * fetch in background the element of a table corresponding to the id and return it through a broadcast receiver
-     * @param tableName the name of the table to retrieve the element from
-     * @param id the id to look for
-     */
-    public void fetchByIdInBackground(FetchListener fetchListener, String tableName, String id) {
-        setFetchBroadcast(fetchListener);
-        Intent intentService = new Intent(context, FetchInBackground.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchById.toString());
-        bundle.putString(FetchInBackground.CLASS_NAME, tableName);
-        bundle.putString(FetchInBackground.ID, id);
-        intentService.putExtras(bundle);
-        context.startService(intentService);
-    }
-
-    /**
-     * fetch in background the element of a table corresponding to the row id and return it through a broadcast receiver
-     * @param tableName the name of the table to retrieve the element from
-     * @param rowId the id to look for
-     */
-    public void fetchByRowIdInBackground(FetchListener fetchListener, String tableName, Long rowId) {
-        setFetchBroadcast(fetchListener);
-        Intent intentService = new Intent(context, FetchInBackground.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(FetchInBackground.FETCH_ACTION, FetchInBackground.Action.fetchById.toString());
-        bundle.putString(FetchInBackground.CLASS_NAME, tableName);
-        bundle.putLong(FetchInBackground.ROW_ID, rowId);
-        intentService.putExtras(bundle);
-        context.startService(intentService);
     }
 
     /**
@@ -258,7 +153,7 @@ public class Memory {
      */
     public <T> long update(T entity) {
         db.openDb();
-        long result = operationHelper.update(jsonDb, entity);
+        long result = operationHelper.update(context, entity);
         db.closeDb();
         return result;
     }
@@ -273,7 +168,7 @@ public class Memory {
         db.openDb();
         List<Long> ids = new ArrayList<>();
         for(T entity : list) {
-            ids.add(operationHelper.update(jsonDb, entity));
+            ids.add(operationHelper.update(context, entity));
         }
         db.closeDb();
         return ids;
@@ -287,7 +182,7 @@ public class Memory {
      */
     public <T> long saveOrUpdate(T entity) {
         db.openDb();
-        long result = operationHelper.saveOrUpdate(jsonDb, entity);
+        long result = operationHelper.saveOrUpdate(context, entity);
         db.closeDb();
         return result;
     }
@@ -302,7 +197,7 @@ public class Memory {
         db.openDb();
         List<Long> ids = new ArrayList<>();
         for(T entity : list) {
-            ids.add(operationHelper.saveOrUpdate(jsonDb, entity));
+            ids.add(operationHelper.saveOrUpdate(context, entity));
         }
         db.closeDb();
         return ids;
@@ -324,16 +219,6 @@ public class Memory {
      */
     public Cursor rawQuery(String query, String[] args) {
         return db.rawQuery(query, args);
-    }
-
-    private void setFetchBroadcast(FetchListener fetchListener) {
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(context);
-        localBroadcastManager.registerReceiver(new FetchReceiver(fetchListener), intentFilterFetch);
-    }
-
-    private void setWriteBroadcast(WriteListener writeListener) {
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(context);
-        localBroadcastManager.registerReceiver(new WriteReceiver(writeListener), intentFilterWrite);
     }
 
 }

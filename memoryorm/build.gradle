@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 24
-        versionCode 27
-        versionName "0.4.5"
+        versionCode 28
+        versionName "0.4.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -32,8 +32,6 @@ dependencies {
     }
     testCompile "org.mockito:mockito-core:1.10.19"
     compile 'com.google.code.gson:gson:2.7'
-    compile 'com.android.support:appcompat-v7:24.2.0'
-    compile 'com.android.support:support-v4:24.2.0'
 }
 
 ext {
@@ -45,7 +43,7 @@ ext {
     artifact = 'memoryorm'
 
     libraryDescription = 'This library is an ORM for android developed in Java with kotlin usage in mind'
-    libraryVersion = '0.4.4'
+    libraryVersion = '0.4.6'
 
     developerId = 'jeantuffier'
     developerName = 'Jean Tuffier'

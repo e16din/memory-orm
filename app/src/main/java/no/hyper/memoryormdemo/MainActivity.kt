@@ -2,11 +2,8 @@ package no.hyper.memoryormdemo
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Parcelable
 import android.util.Log
 import no.hyper.memoryorm.Memory
-import no.hyper.memoryorm.broadcastReceiver.FetchListener
-import no.hyper.memoryorm.broadcastReceiver.WriteListener
 import no.hyper.memoryormdemo.model.OpeningHour
 import no.hyper.memoryormdemo.model.Store
 

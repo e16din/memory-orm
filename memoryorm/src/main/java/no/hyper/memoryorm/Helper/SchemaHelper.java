@@ -17,27 +17,20 @@ import no.hyper.memoryorm.model.Table;
  */
 public class SchemaHelper {
 
-    private static SchemaHelper instance;
-    private Gson gson = new Gson();
-    private Database dbSchema;
+    private static final String PATH = "schema/database.json";
+    private static Database db;
 
-    public static SchemaHelper getInstance() {
-        if (instance == null) {
-            instance = new SchemaHelper();
+    public static Database getDatabase(Context context) {
+        if (db == null) {
+            String schema = getJsonSchema(context);
+            Gson gson = new Gson();
+            db = gson.fromJson(schema, Database.class);
         }
-
-        return instance;
+        return db;
     }
 
-    public Database getDatabase(String jsonDb) {
-        if (dbSchema == null) {
-            dbSchema = gson.fromJson(jsonDb, Database.class);
-        }
-        return dbSchema;
-    }
-
-    public Table getTable(String jsonDb, String name) {
-        for (Table table : getDatabase(jsonDb).getTables()) {
+    public static Table getTable(Context context, String name) {
+        for (Table table : getDatabase(context).getTables()) {
             if (table.getName().equals(name)) {
                 return table;
             }
@@ -45,10 +38,10 @@ public class SchemaHelper {
         return null;
     }
 
-    public String getDatabase(Context context) {
+    private static String getJsonSchema(Context context) {
         if (context == null) return null;
         try {
-            InputStream inputStream = context.getAssets().open("schema/database.json");
+            InputStream inputStream = context.getAssets().open(PATH);
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader reader = new BufferedReader(inputStreamReader);
             StringBuilder sb = new StringBuilder();

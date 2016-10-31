@@ -5,6 +5,15 @@ android {
     compileSdkVersion 24
     buildToolsVersion "23.0.3"
 
+    signingConfigs {
+        hyperKey {
+            keyAlias 'memory'
+            keyPassword 'memory'
+            storeFile file('../keystore.jks')
+            storePassword 'memory'
+        }
+    }
+
     defaultConfig {
         applicationId "no.hyper.memoryormdemo"
         minSdkVersion 15
@@ -16,6 +25,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.hyperKey
         }
     }
     testOptions {
