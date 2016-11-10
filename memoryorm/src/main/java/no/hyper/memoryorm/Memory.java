@@ -31,7 +31,7 @@ public class Memory {
     /**
      * create the database
      */
-    public void createTables() {
+    public void createDatabase() {
         db.openDb();
         tableHelper.createTables();
         db.closeDb();
@@ -40,14 +40,14 @@ public class Memory {
     /**
      * delete the database
      */
-    public void deleteDb() {
+    public void deleteDatabase() {
         context.deleteDatabase(context.getPackageName());
     }
 
     /**
      * delete every row from all the tables
      */
-    public void cleanTables() {
+    public void emptyDatabase() {
         db.openDb();
         tableHelper.cleanTables();
         db.closeDb();
@@ -58,17 +58,17 @@ public class Memory {
      * @param tableName the name of the table to clean
      * @param clause a clause to specify which rows need to be erased
      */
-    public void cleanTable(String tableName, String clause) {
+    public void emptyTable(String tableName, String clause) {
         db.openDb();
         tableHelper.cleanTable(tableName, clause);
         db.closeDb();
     }
 
     /**
-     * save an object in its corresponding table
+     * write the object's attributes in the table that have the same name
      * @param entity the object to save
-     * @param <T>
-     * @return if it succeed, the rowid is returned, null otherwise
+     * @param <T> the type of the object to save
+     * @return return the rowId or null if the operation failed
      */
     public <T> long save(T entity) {
         db.openDb();
