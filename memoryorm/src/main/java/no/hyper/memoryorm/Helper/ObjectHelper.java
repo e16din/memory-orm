@@ -3,6 +3,7 @@ package no.hyper.memoryorm.helper;
 import android.content.ContentValues;
 import android.content.Context;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -44,8 +45,8 @@ public class ObjectHelper {
      * @param tableName: the class containing the attibutes to test
      * @return a list containing the column that represent a list of custom type
      */
-    public static List<Column> getCustomListColumns(Context context, String tableName) {
-        Table table = SchemaHelper.getTable(context, tableName);
+    public static List<Column> getCustomListColumns(Context context, String tableName) throws IOException {
+        Table table = SchemaHelper.getInstance().getTable(context, tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
             if (column.isList() && column.isCustom()) {
@@ -60,8 +61,8 @@ public class ObjectHelper {
      * @param tableName: the class containing the attibutes to test
      * @return a list containing the column that represent a object of custom type
      */
-    public static List<Column> getNestedObjects(Context context, String tableName) {
-        Table table = SchemaHelper.getTable(context, tableName);
+    public static List<Column> getNestedObjects(Context context, String tableName) throws IOException {
+        Table table = SchemaHelper.getInstance().getTable(context, tableName);
         List<Column> columns = new ArrayList<>();
         for (Column column : table.getColumns()) {
             if (!column.isList() && column.isCustom()) {
@@ -84,15 +85,14 @@ public class ObjectHelper {
 
     /**
      *
-     * @param jsonDb
      * @param entity
      * @param <T>
      * @param <U>
      * @return
      */
-    public static <T, U> ContentValues getEntityContentValues(Context context, T entity) {
+    public static <T, U> ContentValues getEntityContentValues(Context context, T entity) throws IOException {
         Class c = entity.getClass();
-        Table table = SchemaHelper.getTable(context, c.getSimpleName());
+        Table table = SchemaHelper.getInstance().getTable(context, c.getSimpleName());
         ContentValues values = new ContentValues();
         for(Column column : table.getColumns()) {
             if (column.isForeignKey()) continue;

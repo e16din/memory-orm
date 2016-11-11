@@ -3,6 +3,7 @@ package no.hyper.memoryorm.builder;
 import android.content.Context;
 import android.database.Cursor;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -72,9 +73,10 @@ public class EntityBuilder {
      * @param tableName: The name of the table where the cursor got the data.
      * @param cursor: cursor containing the values for the entity.
      */
-    public static HashMap<String, Object> bindCursorToHashMap(Context context, String tableName, Cursor cursor) {
+    public static HashMap<String, Object> bindCursorToHashMap(Context context, String tableName, Cursor cursor)
+            throws IOException {
         HashMap<String, Object> map = new HashMap<>();
-        Table table = SchemaHelper.getTable(context, tableName);
+        Table table = SchemaHelper.getInstance().getTable(context, tableName);
 
         for (Column column : table.getColumns()) {
             int index = cursor.getColumnIndex(column.getLabel());
@@ -114,7 +116,7 @@ public class EntityBuilder {
      * @param cursor: cursor containing the values for the entity.
      * @param <T>
      */
-    public static <T> T bindCursorToEntity(Context context, Class<T> classType, Cursor cursor) {
+    public static <T> T bindCursorToEntity(Context context, Class<T> classType, Cursor cursor) throws IOException {
         HashMap<String, Object> map = bindCursorToHashMap(context, classType.getSimpleName(), cursor);
         T entity = null;
         try {

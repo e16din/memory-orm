@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import no.hyper.memoryorm.Memory
+import no.hyper.memoryormdemo.model.Gear
 import no.hyper.memoryormdemo.model.Profile
 
 class MainActivity : AppCompatActivity() {
@@ -19,11 +20,12 @@ class MainActivity : AppCompatActivity() {
         memory.deleteDatabase()
         memory.createDatabase()
 
-        //val profile = Profile("afvhabsflakvabørv", "jake", 13, true)
-        //memory.save(profile)
+        val gears = mutableListOf(Gear("sword", "grass sword"), Gear("armor", "armor of zeldron"))
+        val profile = Profile("afvhabsflakvabørv", "jake", 13, true, gears)
+        memory.save(profile)
 
-        //val fetch = memory.fetchFirst(Profile::class.java)
-        //Log.d(LOG_TAG, fetch.toString())
+        val fetch = memory.fetchFirst(Profile::class.java)
+        Log.d(LOG_TAG, fetch.toString())
     }
 
 }

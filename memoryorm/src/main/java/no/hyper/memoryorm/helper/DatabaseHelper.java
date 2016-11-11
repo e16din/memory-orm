@@ -2,8 +2,11 @@ package no.hyper.memoryorm.helper;
 
 import android.content.Context;
 
+import java.io.IOException;
+
 import no.hyper.memoryorm.DbManager;
 import no.hyper.memoryorm.model.Column;
+import no.hyper.memoryorm.model.Database;
 import no.hyper.memoryorm.model.Table;
 
 /**
@@ -22,8 +25,9 @@ public class DatabaseHelper {
     /**
      * create every table contained in the Database object
      */
-    public void createTables() {
-        for (Table table : SchemaHelper.getDatabase(context).getTables()) {
+    public void createTables() throws IOException {
+        Database database = SchemaHelper.getInstance().getDatabase(context);
+        for (Table table : database.getTables()) {
             createTable(table);
         }
     }
@@ -31,13 +35,13 @@ public class DatabaseHelper {
     /**
      * create the database represented by the object passed as parameter
      */
-    public void createTable(Table table) {
+    private void createTable(Table table) throws IOException {
         StringBuilder content = new StringBuilder();
         content.append("(");
         for (Column column : table.getColumns()) {
             if (!column.isList() && column.isCustom()) {
                 content.append(column.getLabel());
-                createTable(SchemaHelper.getTable(context, column.getType()));
+                createTable(SchemaHelper.getInstance().getTable(context, column.getType()));
                 content.append(" integer,");
             } else if (column.isList() && !column.isCustom()) {
                 content.append(column.getLabel());
@@ -59,27 +63,10 @@ public class DatabaseHelper {
     }
 
     /**
-     * delete all the table represented by the Database object
-     */
-    public void deleteTables() {
-        for (Table table : SchemaHelper.getDatabase(context).getTables()) {
-            deleteTable(table);
-        }
-    }
-
-    /**
-     * delete the table represented by the object passed as parameter
-     */
-    public void deleteTable(Table table) {
-        String request = "DROP TABLE IF EXISTS " + table.getName();
-        db.execute(request);
-    }
-
-    /**
      * delete every row of every tables represented by the Database Object
      */
-    public void cleanTables() {
-        for (Table table : SchemaHelper.getDatabase(context).getTables()) {
+    public void cleanTables() throws IOException {
+        for (Table table : SchemaHelper.getInstance().getDatabase(context).getTables()) {
             cleanTable(table.getName(), null);
         }
     }

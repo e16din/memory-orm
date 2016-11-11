@@ -1,39 +1,5 @@
 {
   "tables": [{
-    "name": "Gear",
-    "columns": [{
-      "label": "id",
-      "type": "text",
-      "primary": true
-    }, {
-      "label": "name",
-      "type": "text"
-    }, {
-      "label": "magical",
-      "type": "integer"
-    }, {
-      "label": "id_Profile",
-      "type": "integer",
-      "foreign_key" : true
-    }]
-  }, {
-    "name": "House",
-    "columns": [{
-      "label": "id",
-      "type": "text",
-      "primary": true
-    }, {
-      "label": "name",
-      "type": "text"
-    }, {
-      "label": "place",
-      "type": "text"
-    }, {
-      "label": "id_Profile",
-      "type": "integer",
-      "foreign_key" : true
-    }]
-  }, {
     "name": "Profile",
     "columns": [{
       "label": "id",
@@ -53,67 +19,17 @@
       "type": "Gear",
       "custom": true,
       "list": true
-    }, {
-      "label": "house",
-      "type": "House",
-      "custom": true
     }]
   }, {
-    "name": "Store",
+    "name": "Gear",
     "columns": [{
-      "label": "id",
-      "type": "text",
-      "primary": true
+      "label": "type",
+      "type": "text"
     }, {
       "label": "name",
       "type": "text"
     }, {
-      "label": "address",
-      "type": "text"
-    }, {
-      "label": "city",
-      "type": "text"
-    }, {
-      "label": "phone",
-      "type": "text"
-    }, {
-      "label": "url",
-      "type": "text"
-    }, {
-      "label": "zipCode",
-      "type": "text"
-    }, {
-      "label": "openingHours",
-      "type": "OpeningHour",
-      "custom": true,
-      "list": true
-    }, {
-      "label": "departments",
-      "type": "text",
-      "list": true
-    }, {
-      "label": "countryCode",
-      "type": "text"
-    }, {
-      "label": "countryName",
-      "type": "text"
-    }, {
-      "label": "lng",
-      "type": "text"
-    }, {
-      "label": "lat",
-      "type": "text"
-    }]
-  }, {
-    "name": "OpeningHour",
-    "columns": [{
-      "label": "name",
-      "type": "text"
-    }, {
-      "label": "hours",
-      "type": "text"
-    }, {
-      "label": "id_Store",
+      "label": "id_Profile",
       "type": "integer",
       "foreign_key": true
     }]

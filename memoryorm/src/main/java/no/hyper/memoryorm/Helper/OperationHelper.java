@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ public class OperationHelper {
      * @param foreignKeys: an hash map of foreign keys. The key represent the name of the column, the value is the id
      * @return the id of the row for the object inserted
      */
-    public <T, U> long insert(Context context, T entity, HashMap<String, Long> foreignKeys) {
+    public <T, U> long insert(Context context, T entity, HashMap<String, Long> foreignKeys) throws IOException {
         List<Column> nestedLists = ObjectHelper.getCustomListColumns(context, entity.getClass().getSimpleName());
         List<Column> nestedObjects = ObjectHelper.getNestedObjects(context, entity.getClass().getSimpleName());
         ContentValues entityValues = ObjectHelper.getEntityContentValues(context, entity);
@@ -83,7 +84,7 @@ public class OperationHelper {
      * @param <T> type of the entity to insert
      * @return the list of rows id
      */
-    public <T> List<Long> insert(Context context, List<T> list, HashMap<String, Long> foreignKeys) {
+    public <T> List<Long> insert(Context context, List<T> list, HashMap<String, Long> foreignKeys) throws IOException {
         if (list.size() <= 0) return null;
 
         List<Long> rows = new ArrayList<>();
@@ -101,7 +102,7 @@ public class OperationHelper {
      * @param <T> type of the entity to fetch
      * @return a list containing all the object saved in the table
      */
-    public <T> List<T> fetchAll(Context context, Class<T> classType, String condition) {
+    public <T> List<T> fetchAll(Context context, Class<T> classType, String condition) throws IOException {
         Cursor cursor = db.rawQuery(getFetchAllRequest(classType.getSimpleName(), condition), null);
         if (cursor == null || cursor.getCount() <= 0) return null;
 
@@ -126,7 +127,7 @@ public class OperationHelper {
      * @param <T> type of the entity to fetch
      * @return the first object saved in the table
      */
-    public <T> T fetchFirst(Context context, Class<T> classType, String condition) {
+    public <T> T fetchFirst(Context context, Class<T> classType, String condition) throws IOException {
         Cursor cursor = db.rawQuery(getFetchAllRequest(classType.getSimpleName(), condition), null);
         if (cursor == null || cursor.getCount() <= 0) return null;
         cursor.moveToFirst();
@@ -143,7 +144,7 @@ public class OperationHelper {
      * @param id: the id to look for
      * @return the object saved in db with the corresponding id
      */
-    public <T> T fetchById(Context context, Class<T> classType, String id) {
+    public <T> T fetchById(Context context, Class<T> classType, String id) throws IOException {
         Cursor cursor = db.rawQuery(getFetchByIdRequest(classType.getSimpleName(), id), null);
         if (cursor == null || cursor.getCount() <= 0) return null;
 
@@ -163,7 +164,7 @@ public class OperationHelper {
      * @param <T> type of the entity to fetch
      * @return the object saved in the db with the corresponding rowid
      */
-    public <T> T fetchByRowId(Context context, Class<T> classType, long id) {
+    public <T> T fetchByRowId(Context context, Class<T> classType, long id) throws IOException {
         Cursor cursor = db.rawQuery(getFetchByRowIdRequest(classType.getSimpleName(), id), null);
         if (cursor == null || cursor.getCount() <= 0) return null;
 
@@ -180,7 +181,7 @@ public class OperationHelper {
      * @param <T> type of the entity to fetch
      * @return the number of row affected
      */
-    public <T> long update(Context context, T entity) {
+    public <T> long update(Context context, T entity) throws IOException {
         String id = getEntityId(entity);
         if (!id.equals("-1")) {
             return update(context, entity, id);
@@ -196,7 +197,7 @@ public class OperationHelper {
      * @param <T> type of the entity to fetch
      * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted
      */
-    public <T> long saveOrUpdate(Context context, T entity) {
+    public <T> long saveOrUpdate(Context context, T entity) throws IOException {
         String id = getEntityId(entity);
         if (!id.equals("-1")) {
             Cursor cursor = db.rawQuery(getFetchByIdRequest(entity.getClass().getSimpleName(), id), null);
@@ -218,13 +219,23 @@ public class OperationHelper {
      * @param <T> type of the entity to fetch
      * @return for each items, -1 if it failed, 0 if a row was updated or the rowid if it inserted
      */
-    public <T> List<Long> saveOrUpdate(Context context, List<T> list) {
+    public <T> List<Long> saveOrUpdate(Context context, List<T> list) throws IOException {
         if (list.size() <= 0) return null;
         List<Long> results = new ArrayList<>();
         for(T entity : list) {
             results.add(saveOrUpdate(context, entity));
         }
         return results;
+    }
+
+    /**
+     * fetch all the row of a table and return the number of items in the cursor
+     * @param tableName the name of the table that is counted
+     * @return the number of row in the cursor
+     */
+    public Integer getTableCount(String tableName) {
+        Cursor cursor = db.rawQuery(getFetchAllRequest(tableName, null), null);
+        return cursor.getCount();
     }
 
     private String getFetchAllRequest(String table, String condition) {
@@ -251,10 +262,10 @@ public class OperationHelper {
                 .toSqlRequest();
     }
 
-    private <T, U> T getEntity(Context context, Class<T> classType, Cursor cursor) {
+    private <T, U> T getEntity(Context context, Class<T> classType, Cursor cursor) throws IOException {
         T entity = EntityBuilder.bindCursorToEntity(context, classType, cursor);
 
-        Table table = SchemaHelper.getTable(context, classType.getSimpleName());
+        Table table = SchemaHelper.getInstance().getTable(context, classType.getSimpleName());
         if (table == null) return null;
 
         for (Column column : table.getColumns()) {
@@ -299,7 +310,7 @@ public class OperationHelper {
         }
     }
 
-    private <T> long update(Context context, T entity, String id) {
+    private <T> long update(Context context, T entity, String id) throws IOException {
         return db.update(entity.getClass().getSimpleName(), ObjectHelper.getEntityContentValues(context, entity), id);
     }
 

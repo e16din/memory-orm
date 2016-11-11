@@ -5,15 +5,6 @@ android {
     compileSdkVersion 24
     buildToolsVersion "23.0.3"
 
-    signingConfigs {
-        hyperKey {
-            keyAlias 'memory'
-            keyPassword 'memory'
-            storeFile file('../keystore.jks')
-            storePassword 'memory'
-        }
-    }
-
     defaultConfig {
         applicationId "no.hyper.memoryormdemo"
         minSdkVersion 15
@@ -22,23 +13,9 @@ android {
         versionName "1.2"
     }
     buildTypes {
-        debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.hyperKey
-        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.hyperKey
-        }
-    }
-    productFlavors {
-        staging {
-            applicationId "no.hyper.memoryormdemo"
-        }
-        production {
-            applicationId "no.hyper.memoryormdemo"
         }
     }
     testOptions {
@@ -52,7 +29,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.2.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile project(path: ':memoryorm')
-    compile 'com.facebook.stetho:stetho:1.4.1'
 }
 buildscript {
     ext.kotlin_version = '1.0.3'

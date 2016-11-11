@@ -18,18 +18,27 @@ import no.hyper.memoryorm.model.Table;
 public class SchemaHelper {
 
     private static final String PATH = "schema/database.json";
-    private static Database db;
+    private static SchemaHelper instance;
+    private Database db;
 
-    public static Database getDatabase(Context context) {
+    public static SchemaHelper getInstance() {
+        if (instance == null) {
+            instance = new SchemaHelper();
+        }
+        return instance;
+    }
+
+    public Database getDatabase(Context context) throws IOException {
         if (db == null) {
-            String schema = getJsonSchema(context);
+            InputStream stream = context.getAssets().open(PATH);
+            String schema = getJsonSchema(stream);
             Gson gson = new Gson();
             db = gson.fromJson(schema, Database.class);
         }
         return db;
     }
 
-    public static Table getTable(Context context, String name) {
+    public Table getTable(Context context, String name) throws IOException {
         for (Table table : getDatabase(context).getTables()) {
             if (table.getName().equals(name)) {
                 return table;
@@ -38,26 +47,19 @@ public class SchemaHelper {
         return null;
     }
 
-    private static String getJsonSchema(Context context) {
-        if (context == null) return null;
-        try {
-            InputStream inputStream = context.getAssets().open(PATH);
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-            StringBuilder sb = new StringBuilder();
+    private String getJsonSchema(InputStream stream) throws IOException {
+        InputStreamReader inputStreamReader = new InputStreamReader(stream);
+        BufferedReader reader = new BufferedReader(inputStreamReader);
+        StringBuilder sb = new StringBuilder();
 
-            String line;
-            do {
-                line = reader.readLine();
-                if (line != null) sb.append(line);
-            } while (line != null);
+        String line;
+        do {
+            line = reader.readLine();
+            if (line != null) sb.append(line);
+        } while (line != null);
 
-            reader.close();
-            return sb.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        reader.close();
+        return sb.toString();
     }
 
 }

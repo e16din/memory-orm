@@ -71,9 +71,8 @@ public class QueryBuilder {
         }
         if(!where.equals("")) {
             sb.append(where);
-            sb.append(" ");
         }
-        sb.append(where);
+        sb.append(";");
         return sb.toString();
     }
 

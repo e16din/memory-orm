@@ -7,5 +7,6 @@ data class Profile (
         var id : String?,
         var name : String,
         var age : Int,
-        var human : Boolean
+        var human : Boolean,
+        var gear : MutableList<Gear>
 )
