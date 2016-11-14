@@ -2,13 +2,10 @@ package no.hyper.memoryormdemo
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Parcelable
 import android.util.Log
 import no.hyper.memoryorm.Memory
-import no.hyper.memoryorm.broadcastReceiver.FetchListener
-import no.hyper.memoryorm.broadcastReceiver.WriteListener
-import no.hyper.memoryormdemo.model.OpeningHour
-import no.hyper.memoryormdemo.model.Store
+import no.hyper.memoryormdemo.model.Gear
+import no.hyper.memoryormdemo.model.Profile
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,17 +17,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        this.deleteDatabase((this.packageName))
+        memory.deleteDatabase()
+        memory.createDatabase()
 
-        memory.createTables()
+        val gears = mutableListOf(Gear("sword", "grass sword"), Gear("armor", "armor of zeldron"))
+        val profile = Profile("afvhabsflakvabørv", "jake", 13, true, gears)
+        memory.save(profile)
 
-        val openingHours = listOf(OpeningHour("monday-saturday", "9-17"), OpeningHour("sunday", "closed"))
-        val departments = listOf("dep1", "dep2")
-        var store = Store("id1", "store1", "address1", "city1", "phone1", "url1", "zip1", departments, openingHours,
-                "code1", "name1", "lgn1", "lat1")
-
-        memory.save(store)
-        val fetch = memory.fetchFirst(Store::class.java)
+        val fetch = memory.fetchFirst(Profile::class.java)
         Log.d(LOG_TAG, fetch.toString())
     }
 
