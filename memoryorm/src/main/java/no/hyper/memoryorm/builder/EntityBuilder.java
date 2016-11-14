@@ -48,20 +48,21 @@ public class EntityBuilder {
      * @param <T>
      * @return the entity with the values pass in the hash maps
      */
-    public static <T> T bindHashMapToEntity(T entity, HashMap<String, Object> values) {
-        for(Field field : ObjectHelper.getDeclaredFields(entity.getClass())) {
-            try {
-                Object value = values.get(field.getName());
-                field.setAccessible(true);
-                if (value == null) continue;
-                String typeName = field.getType().getSimpleName();
-                if (typeName.equals("boolean") || typeName.equals("Boolean")) {
-                    field.set(entity, value.equals(1));
-                } else {
-                    field.set(entity, value);
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+    public static <T> T bindHashMapToEntity(Context context, T entity, HashMap<String, Object> values)
+            throws IOException, NoSuchFieldException, IllegalAccessException {
+        Table table = SchemaHelper.getInstance().getTable(context, entity.getClass().getSimpleName());
+        for(Column column : table.getColumns()) {
+            if (column.isForeignKey()) continue;
+
+            Field field = entity.getClass().getDeclaredField(column.getLabel());
+            Object value = values.get(field.getName());
+            field.setAccessible(true);
+            if (value == null) continue;
+            String typeName = field.getType().getSimpleName();
+            if (typeName.equals("boolean") || typeName.equals("Boolean")) {
+                field.set(entity, value.equals(1));
+            } else {
+                field.set(entity, value);
             }
         }
 
@@ -116,37 +117,33 @@ public class EntityBuilder {
      * @param cursor: cursor containing the values for the entity.
      * @param <T>
      */
-    public static <T> T bindCursorToEntity(Context context, Class<T> classType, Cursor cursor) throws IOException {
+    public static <T> T bindCursorToEntity(Context context, Class<T> classType, Cursor cursor)
+            throws IOException, NoSuchFieldException, IllegalAccessException, InvocationTargetException,
+            InstantiationException {
         HashMap<String, Object> map = bindCursorToHashMap(context, classType.getSimpleName(), cursor);
+        Constructor[] constructors = classType.getDeclaredConstructors();
+        Constructor validConstructor = null;
+
+        for (Constructor constructor : constructors) {
+            boolean valid = true;
+            for (Class c : constructor.getParameterTypes()) {
+                if (c.getSimpleName().equals("InstantReloadException") ||
+                        c.getSimpleName().equals("DefaultConstructorMarker")||
+                        c.getSimpleName().equals("Parcel")) {
+                    valid = false;
+                }
+            }
+            if (valid) {
+                validConstructor = constructor;
+                break;
+            }
+        }
+
         T entity = null;
-        try {
-            Constructor[] constructors = classType.getDeclaredConstructors();
-            Constructor validConstructor = null;
-            for (Constructor constructor : constructors) {
-                boolean valid = true;
-                for (Class c : constructor.getParameterTypes()) {
-                    if (c.getSimpleName().equals("InstantReloadException") ||
-                            c.getSimpleName().equals("DefaultConstructorMarker")||
-                            c.getSimpleName().equals("Parcel")) {
-                        valid = false;
-                    }
-                }
-                if (valid) {
-                    validConstructor = constructor;
-                    break;
-                }
-            }
-            if (validConstructor != null) {
-                Object[] parameters = getDefaultConstructorParameters(validConstructor.getParameterTypes());
-                entity = (T)validConstructor.newInstance(parameters);
-                entity = bindHashMapToEntity(entity, map);
-            }
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        if (validConstructor != null) {
+            Object[] parameters = getDefaultConstructorParameters(validConstructor.getParameterTypes());
+            entity = (T) validConstructor.newInstance(parameters);
+            entity = bindHashMapToEntity(context, entity, map);
         }
         return entity;
     }

@@ -20,7 +20,7 @@ public class QueryBuilder {
 
     public QueryBuilder select() {
         operation = Operation.SELECT;
-        columns.add("*");
+        columns.add("ROWID, *");
         return this;
     }
 

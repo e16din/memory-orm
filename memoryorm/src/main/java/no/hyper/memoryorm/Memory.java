@@ -8,7 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.hyper.memoryorm.helper.DatabaseHelper;
-import no.hyper.memoryorm.helper.OperationHelper;
+import no.hyper.memoryorm.helper.SchemaHelper;
+import no.hyper.memoryorm.operation.FetchOperation;
+import no.hyper.memoryorm.operation.InsertOperation;
+import no.hyper.memoryorm.operation.UpdateOperation;
 
 /**
  * Created by Jean on 5/12/2016.
@@ -18,7 +21,6 @@ public class Memory {
     private static final String LOG_TAG = Memory.class.getSimpleName();
     private DbManager db;
     private DatabaseHelper databaseHelper;
-    private OperationHelper operationHelper;
     private Context context;
 
     public Memory(Context context) {
@@ -26,7 +28,6 @@ public class Memory {
         db = DbManager.getInstance(context, context.getPackageName(), null, 1);
 
         databaseHelper = new DatabaseHelper(db, context);
-        operationHelper = new OperationHelper(db);
     }
 
     /**
@@ -59,8 +60,8 @@ public class Memory {
         db.openDb();
         long result = 0;
         try {
-            result = operationHelper.insert(context, entity, null);
-        } catch (IOException e) {
+            result = InsertOperation.insert(db, context, entity, null);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -78,8 +79,8 @@ public class Memory {
         db.openDb();
         List<Long> rows = null;
         try {
-            rows = operationHelper.insert(context, list, null);
-        } catch (IOException e) {
+            rows = InsertOperation.insert(db, context, list, null);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -96,8 +97,8 @@ public class Memory {
         db.openDb();
         List<T> result = null;
         try {
-            result = operationHelper.fetchAll(context, classType, null);
-        } catch (IOException e) {
+            result = FetchOperation.fetchAll(db, context, classType, null);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -114,8 +115,8 @@ public class Memory {
         db.openDb();
         T entity = null;
         try {
-            entity = operationHelper.fetchFirst(context, entityToFetch, null);
-        } catch (IOException e) {
+            entity = FetchOperation.fetchFirst(db, context, entityToFetch, null);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -133,8 +134,8 @@ public class Memory {
         db.openDb();
         T result = null;
         try {
-            result = operationHelper.fetchById(context, entityToFetch, id);
-        } catch (IOException e) {
+            result = FetchOperation.fetchById(db, context, entityToFetch, id);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -152,8 +153,8 @@ public class Memory {
         db.openDb();
         T result = null;
         try {
-            result = operationHelper.fetchByRowId(context, entityToFetch, rowId);
-        } catch (IOException e) {
+            result = FetchOperation.fetchByRowId(db, context, entityToFetch, rowId);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -170,8 +171,8 @@ public class Memory {
         db.openDb();
         long result = 0;
         try {
-            result = operationHelper.update(context, entity);
-        } catch (IOException e) {
+            result = UpdateOperation.update(db, context, entity);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -189,8 +190,8 @@ public class Memory {
         List<Long> ids = new ArrayList<>();
         for(T entity : list) {
             try {
-                ids.add(operationHelper.update(context, entity));
-            } catch (IOException e) {
+                ids.add(UpdateOperation.update(db, context, entity));
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -208,8 +209,8 @@ public class Memory {
         db.openDb();
         long result = 0;
         try {
-            result = operationHelper.saveOrUpdate(context, entity);
-        } catch (IOException e) {
+            result = UpdateOperation.saveOrUpdate(db, context, entity);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         db.closeDb();
@@ -227,8 +228,8 @@ public class Memory {
         List<Long> ids = new ArrayList<>();
         for(T entity : list) {
             try {
-                ids.add(operationHelper.saveOrUpdate(context, entity));
-            } catch (IOException e) {
+                ids.add(UpdateOperation.saveOrUpdate(db, context, entity));
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -243,7 +244,7 @@ public class Memory {
      */
     public Integer getTableCount(String tableName) {
         db.openDb();
-        Integer rows = operationHelper.getTableCount(tableName);
+        Integer rows = FetchOperation.getTableCount(db, tableName);
         db.closeDb();
         return rows;
     }
