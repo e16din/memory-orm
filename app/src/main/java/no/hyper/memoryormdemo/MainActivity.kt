@@ -20,7 +20,9 @@ class MainActivity : AppCompatActivity() {
         memory.deleteDatabase()
         memory.createDatabase()
 
-        val gears = mutableListOf(Gear("sword", "grass sword"), Gear("armor", "armor of zeldron"))
+        val sword = Gear(Gear.Type.SWORD, "grass sword")
+        val armor = Gear(Gear.Type.ARMOR, "armor of zeldron")
+        val gears = mutableListOf(sword, armor)
         val profile = Profile("afvhabsflakvabørv", "jake", 13, true, gears)
         memory.save(profile)
 

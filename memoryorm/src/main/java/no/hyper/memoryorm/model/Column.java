@@ -14,6 +14,9 @@ public class Column {
     private boolean list = false;
     private boolean custom = false;
 
+    @SerializedName("enum")
+    private boolean _enum = false;
+
     @SerializedName("foreign_key")
     private boolean foreignKey = false;
 
@@ -21,48 +24,28 @@ public class Column {
         return label;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
     public String getType() {
         return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public boolean isPrimary() {
         return primary;
     }
 
-    public void setPrimary(boolean primary) {
-        this.primary = primary;
-    }
-
     public boolean isList() {
         return list;
-    }
-
-    public void setList(boolean list) {
-        this.list = list;
     }
 
     public boolean isForeignKey() {
         return foreignKey;
     }
 
-    public void setForeignKey(boolean foreignKey) {
-        this.foreignKey = foreignKey;
-    }
-
     public boolean isCustom() {
         return custom;
     }
 
-    public void setCustom(boolean custom) {
-        this.custom = custom;
+    public boolean isEnum() {
+        return _enum;
     }
 
 }
