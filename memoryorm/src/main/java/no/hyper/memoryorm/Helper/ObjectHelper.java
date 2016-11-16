@@ -94,8 +94,6 @@ public class ObjectHelper {
                     }
                     builder.deleteCharAt(builder.length() - 1);
                     values.put(column.getLabel(), builder.toString());
-                } else if (column.isEnum()) {
-
                 } else {
                     values.put(column.getLabel(), convertJavaValueToSQLite(value).toString());
                 }

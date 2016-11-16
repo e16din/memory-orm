@@ -5,6 +5,16 @@ package no.hyper.memoryormdemo.model
  */
 data class Gear(val type: Type, val name: String) {
 
-    enum class Type { SWORD, ARMOR }
+    enum class Type {
+        SWORD{
+            override fun isGolden() = false
+        },
+
+        ARMOR{
+            override fun isGolden() = true
+        };
+
+        abstract fun isGolden() : Boolean
+    }
 
 }

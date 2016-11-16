@@ -24,7 +24,7 @@
     "name": "Gear",
     "columns": [{
       "label": "type",
-      "type": "Type",
+      "type": "text",
       "enum": true
     }, {
       "label": "name",

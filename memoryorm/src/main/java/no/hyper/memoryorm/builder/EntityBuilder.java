@@ -34,7 +34,12 @@ public class EntityBuilder {
                 case "int": parameters[i] = 0; break;
                 case "boolean": parameters[i] = false; break;
                 case "String": parameters[i] = ""; break;
-                case "List": parameters[i] = new ArrayList<>();
+                case "List": parameters[i] = new ArrayList<>(); break;
+                default: if (classes[i].isEnum()){
+                    String enumValue = classes[i].getEnumConstants()[0].toString();
+                    Class enumClass = classes[i];
+                    parameters[i] = Enum.valueOf(enumClass, enumValue);
+                }
             }
         }
         return parameters;
@@ -48,7 +53,7 @@ public class EntityBuilder {
      * @param <T>
      * @return the entity with the values pass in the hash maps
      */
-    public static <T> T bindHashMapToEntity(Context context, T entity, HashMap<String, Object> values)
+    public static <T, U> T bindHashMapToEntity(Context context, T entity, HashMap<String, Object> values)
             throws IOException, NoSuchFieldException, IllegalAccessException {
         Table table = SchemaHelper.getInstance().getTable(context, entity.getClass().getSimpleName());
         for(Column column : table.getColumns()) {
@@ -58,11 +63,18 @@ public class EntityBuilder {
             Object value = values.get(field.getName());
             field.setAccessible(true);
             if (value == null) continue;
-            String typeName = field.getType().getSimpleName();
-            if (typeName.equals("boolean") || typeName.equals("Boolean")) {
-                field.set(entity, value.equals(1));
+
+            if (field.getType().isEnum()) {
+                Class enumClass = field.getType();
+                U enumValue = (U)Enum.valueOf(enumClass, value.toString());
+                field.set(entity, enumValue);
             } else {
-                field.set(entity, value);
+                String typeName = field.getType().getSimpleName();
+                if (typeName.equals("boolean") || typeName.equals("Boolean")) {
+                    field.set(entity, value.equals(1));
+                } else {
+                    field.set(entity, value);
+                }
             }
         }
 
