@@ -23,12 +23,33 @@
   }, {
     "name": "Gear",
     "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
       "label": "type",
       "type": "text",
       "enum": true
     }, {
       "label": "name",
       "type": "text"
+    }, {
+      "label": "id_Profile",
+      "type": "integer",
+      "foreign_key": true
+    }]
+  }, {
+    "name": "Animal",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "magic",
+      "type": "integer"
     }, {
       "label": "id_Profile",
       "type": "integer",
