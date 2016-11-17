@@ -34,7 +34,12 @@ public class EntityBuilder {
                 case "int": parameters[i] = 0; break;
                 case "boolean": parameters[i] = false; break;
                 case "String": parameters[i] = ""; break;
-                case "List": parameters[i] = new ArrayList<>();
+                case "List": parameters[i] = new ArrayList<>(); break;
+                default: if (classes[i].isEnum()){
+                    String enumValue = classes[i].getEnumConstants()[0].toString();
+                    Class enumClass = classes[i];
+                    parameters[i] = Enum.valueOf(enumClass, enumValue);
+                }
             }
         }
         return parameters;
@@ -48,20 +53,28 @@ public class EntityBuilder {
      * @param <T>
      * @return the entity with the values pass in the hash maps
      */
-    public static <T> T bindHashMapToEntity(T entity, HashMap<String, Object> values) {
-        for(Field field : ObjectHelper.getDeclaredFields(entity.getClass())) {
-            try {
-                Object value = values.get(field.getName());
-                field.setAccessible(true);
-                if (value == null) continue;
+    public static <T, U> T bindHashMapToEntity(Context context, T entity, HashMap<String, Object> values)
+            throws IOException, NoSuchFieldException, IllegalAccessException {
+        Table table = SchemaHelper.getInstance().getTable(context, entity.getClass().getSimpleName());
+        for(Column column : table.getColumns()) {
+            if (column.isForeignKey()) continue;
+
+            Field field = entity.getClass().getDeclaredField(column.getLabel());
+            Object value = values.get(field.getName());
+            field.setAccessible(true);
+            if (value == null) continue;
+
+            if (field.getType().isEnum()) {
+                Class enumClass = field.getType();
+                U enumValue = (U)Enum.valueOf(enumClass, value.toString());
+                field.set(entity, enumValue);
+            } else {
                 String typeName = field.getType().getSimpleName();
                 if (typeName.equals("boolean") || typeName.equals("Boolean")) {
                     field.set(entity, value.equals(1));
                 } else {
                     field.set(entity, value);
                 }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
             }
         }
 
@@ -116,37 +129,33 @@ public class EntityBuilder {
      * @param cursor: cursor containing the values for the entity.
      * @param <T>
      */
-    public static <T> T bindCursorToEntity(Context context, Class<T> classType, Cursor cursor) throws IOException {
+    public static <T> T bindCursorToEntity(Context context, Class<T> classType, Cursor cursor)
+            throws IOException, NoSuchFieldException, IllegalAccessException, InvocationTargetException,
+            InstantiationException {
         HashMap<String, Object> map = bindCursorToHashMap(context, classType.getSimpleName(), cursor);
+        Constructor[] constructors = classType.getDeclaredConstructors();
+        Constructor validConstructor = null;
+
+        for (Constructor constructor : constructors) {
+            boolean valid = true;
+            for (Class c : constructor.getParameterTypes()) {
+                if (c.getSimpleName().equals("InstantReloadException") ||
+                        c.getSimpleName().equals("DefaultConstructorMarker")||
+                        c.getSimpleName().equals("Parcel")) {
+                    valid = false;
+                }
+            }
+            if (valid) {
+                validConstructor = constructor;
+                break;
+            }
+        }
+
         T entity = null;
-        try {
-            Constructor[] constructors = classType.getDeclaredConstructors();
-            Constructor validConstructor = null;
-            for (Constructor constructor : constructors) {
-                boolean valid = true;
-                for (Class c : constructor.getParameterTypes()) {
-                    if (c.getSimpleName().equals("InstantReloadException") ||
-                            c.getSimpleName().equals("DefaultConstructorMarker")||
-                            c.getSimpleName().equals("Parcel")) {
-                        valid = false;
-                    }
-                }
-                if (valid) {
-                    validConstructor = constructor;
-                    break;
-                }
-            }
-            if (validConstructor != null) {
-                Object[] parameters = getDefaultConstructorParameters(validConstructor.getParameterTypes());
-                entity = (T)validConstructor.newInstance(parameters);
-                entity = bindHashMapToEntity(entity, map);
-            }
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        if (validConstructor != null) {
+            Object[] parameters = getDefaultConstructorParameters(validConstructor.getParameterTypes());
+            entity = (T) validConstructor.newInstance(parameters);
+            entity = bindHashMapToEntity(context, entity, map);
         }
         return entity;
     }

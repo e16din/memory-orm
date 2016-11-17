@@ -39,13 +39,13 @@ public class DatabaseHelper {
         StringBuilder content = new StringBuilder();
         content.append("(");
         for (Column column : table.getColumns()) {
-            if (!column.isList() && column.isCustom()) {
+            if (column.isEnum() || (column.isList() && !column.isCustom())) {
+                content.append(column.getLabel());
+                content.append(" text,");
+            } else if (!column.isList() && column.isCustom()) {
                 content.append(column.getLabel());
                 createTable(SchemaHelper.getInstance().getTable(context, column.getType()));
                 content.append(" integer,");
-            } else if (column.isList() && !column.isCustom()) {
-                content.append(column.getLabel());
-                content.append(" text,");
             } else if (!column.isList() && !column.isCustom()) {
                 content.append(column.getLabel());
                 content.append(" ");
