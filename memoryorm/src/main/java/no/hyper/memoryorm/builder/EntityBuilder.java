@@ -27,7 +27,8 @@ public class EntityBuilder {
      * @param classes: Array of parameters' class.
      * @return: int = 0, boolean = false, String = "".
      */
-    public static Object[] getDefaultConstructorParameters(Class<?>[] classes) {
+    public static Object[] getDefaultConstructorParameters(Class<?>[] classes)
+            throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Object[] parameters = new Object[classes.length];
         for (int i = 0; i < classes.length; i++) {
             switch (classes[i].getSimpleName()) {
@@ -35,14 +36,48 @@ public class EntityBuilder {
                 case "boolean": parameters[i] = false; break;
                 case "String": parameters[i] = ""; break;
                 case "List": parameters[i] = new ArrayList<>(); break;
-                default: if (classes[i].isEnum()){
-                    String enumValue = classes[i].getEnumConstants()[0].toString();
-                    Class enumClass = classes[i];
-                    parameters[i] = Enum.valueOf(enumClass, enumValue);
-                }
+                default:
+                    if (classes[i].isEnum()){
+                        String enumValue = classes[i].getEnumConstants()[0].toString();
+                        Class enumClass = classes[i];
+                        parameters[i] = Enum.valueOf(enumClass, enumValue);
+                    } else {
+                        Class objectClass = (Class)classes[i];
+                        Constructor constructor = getConstructor(objectClass);
+                        Object[] params = getDefaultConstructorParameters(constructor.getParameterTypes());
+
+                        if (constructor != null) {
+                            parameters[i] = constructor.newInstance(params);
+                        } else {
+                            parameters[i] = null;
+                        }
+
+                    }
             }
         }
         return parameters;
+    }
+
+    public static Constructor getConstructor(Class classType) {
+        Constructor[] constructors = classType.getDeclaredConstructors();
+        Constructor validConstructor = null;
+
+        for (Constructor constructor : constructors) {
+            boolean valid = true;
+            for (Class c : constructor.getParameterTypes()) {
+                if (c.getSimpleName().equals("InstantReloadException") ||
+                        c.getSimpleName().equals("DefaultConstructorMarker")||
+                        c.getSimpleName().equals("Parcel")) {
+                    valid = false;
+                }
+            }
+            if (valid) {
+                validConstructor = constructor;
+                break;
+            }
+        }
+
+        return validConstructor;
     }
 
     /**
@@ -133,23 +168,7 @@ public class EntityBuilder {
             throws IOException, NoSuchFieldException, IllegalAccessException, InvocationTargetException,
             InstantiationException {
         HashMap<String, Object> map = bindCursorToHashMap(context, classType.getSimpleName(), cursor);
-        Constructor[] constructors = classType.getDeclaredConstructors();
-        Constructor validConstructor = null;
-
-        for (Constructor constructor : constructors) {
-            boolean valid = true;
-            for (Class c : constructor.getParameterTypes()) {
-                if (c.getSimpleName().equals("InstantReloadException") ||
-                        c.getSimpleName().equals("DefaultConstructorMarker")||
-                        c.getSimpleName().equals("Parcel")) {
-                    valid = false;
-                }
-            }
-            if (valid) {
-                validConstructor = constructor;
-                break;
-            }
-        }
+        Constructor validConstructor = getConstructor(classType);
 
         T entity = null;
         if (validConstructor != null) {
