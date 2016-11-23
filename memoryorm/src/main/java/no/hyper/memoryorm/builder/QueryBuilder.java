@@ -15,7 +15,7 @@ public class QueryBuilder {
     private String join = "";
 
     private enum Operation {
-        SELECT
+        SELECT, DELETE
     }
 
     public QueryBuilder select() {
@@ -32,6 +32,11 @@ public class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder delete() {
+        operation = Operation.DELETE;
+        return this;
+    }
+
     public QueryBuilder from(String table) {
         from = "from " + table;
         return this;
@@ -40,6 +45,13 @@ public class QueryBuilder {
     public QueryBuilder where(String condition) {
         if (condition != null) {
             this.where = "WHERE " + condition;
+        }
+        return this;
+    }
+
+    public QueryBuilder whereId(Long id) {
+        if (id != null) {
+            this.where = "WHERE id=" + id;
         }
         return this;
     }

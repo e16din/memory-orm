@@ -88,6 +88,82 @@ public class Memory {
     }
 
     /**
+     * if the object does not exist in database, it will be inserted, or update otherwise
+     * @param entity entity to either save or update
+     * @param <T> the type of the object to save or update
+     * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted
+     */
+    public <T> Long saveOrUpdate(T entity) {
+        db.openDb();
+        long result = 0;
+        try {
+            result = UpdateOperation.saveOrUpdate(db, context, entity);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        db.closeDb();
+        return result;
+    }
+
+    /**
+     * execute the function `saveOrUpdate` for each items of the list
+     * @param list list of item to save or update
+     * @param <T> the type of the object to save or update
+     * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted, for each items
+     */
+    public <T> List<Long> saveOrUpdate(List<T> list) {
+        db.openDb();
+        List<Long> ids = new ArrayList<>();
+        for(T entity : list) {
+            try {
+                ids.add(UpdateOperation.saveOrUpdate(db, context, entity));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        db.closeDb();
+        return ids;
+    }
+
+    /**
+     * update the row in database represented by an object
+     * @param entity the object to update
+     * @param <T> the type of the object to update
+     * @return true if it worked, false otherwise
+     */
+    public <T> Long update(T entity) {
+        db.openDb();
+        long result = 0;
+        try {
+            result = UpdateOperation.update(db, context, entity);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        db.closeDb();
+        return result;
+    }
+
+    /**
+     * update the rows in database represented by the objects
+     * @param list list of entity to update
+     * @param <T> the type of the object to update
+     * @return list of boolean, one for each update, in the same order
+     */
+    public <T> List<Long> update(List<T> list) {
+        db.openDb();
+        List<Long> ids = new ArrayList<>();
+        for(T entity : list) {
+            try {
+                ids.add(UpdateOperation.update(db, context, entity));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        db.closeDb();
+        return ids;
+    }
+
+    /**
      * return from the database a list of object contained in a table
      * @param classType the type of the object corresponding to a table in the database
      * @param <T> the type of the object to fetch
@@ -162,82 +238,6 @@ public class Memory {
     }
 
     /**
-     * update the row in database represented by an object
-     * @param entity the object to update
-     * @param <T> the type of the object to update
-     * @return true if it worked, false otherwise
-     */
-    public <T> Long update(T entity) {
-        db.openDb();
-        long result = 0;
-        try {
-            result = UpdateOperation.update(db, context, entity);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        db.closeDb();
-        return result;
-    }
-
-    /**
-     * update the rows in database represented by the objects
-     * @param list list of entity to update
-     * @param <T> the type of the object to update
-     * @return list of boolean, one for each update, in the same order
-     */
-    public <T> List<Long> update(List<T> list) {
-        db.openDb();
-        List<Long> ids = new ArrayList<>();
-        for(T entity : list) {
-            try {
-                ids.add(UpdateOperation.update(db, context, entity));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        db.closeDb();
-        return ids;
-    }
-
-    /**
-     * if the object does not exist in database, it will be inserted, or update otherwise
-     * @param entity entity to either save or update
-     * @param <T> the type of the object to save or update
-     * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted
-     */
-    public <T> Long saveOrUpdate(T entity) {
-        db.openDb();
-        long result = 0;
-        try {
-            result = UpdateOperation.saveOrUpdate(db, context, entity);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        db.closeDb();
-        return result;
-    }
-
-    /**
-     * execute the function `saveOrUpdate` for each items of the list
-     * @param list list of item to save or update
-     * @param <T> the type of the object to save or update
-     * @return -1 if it failed, 0 if it updated a row or the rowid if it inserted, for each items
-     */
-    public <T> List<Long> saveOrUpdate(List<T> list) {
-        db.openDb();
-        List<Long> ids = new ArrayList<>();
-        for(T entity : list) {
-            try {
-                ids.add(UpdateOperation.saveOrUpdate(db, context, entity));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        db.closeDb();
-        return ids;
-    }
-
-    /**
      * count the number of row in a table
      * @param tableName name of the table that is counted
      * @return the number of row in a table
@@ -270,6 +270,12 @@ public class Memory {
     public void emptyTable(String tableName, String clause) {
         db.openDb();
         databaseHelper.cleanTable(tableName, clause);
+        db.closeDb();
+    }
+
+    public void deleteById(String tableName, String id) {
+        db.openDb();
+        db.delete(tableName, "id='" + id + "';");
         db.closeDb();
     }
 
