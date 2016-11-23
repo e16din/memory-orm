@@ -27,7 +27,15 @@ class MainActivity : AppCompatActivity() {
         memory.save(profile)
 
         val fetch = memory.fetchFirst(Profile::class.java)
-        Log.d(LOG_TAG, fetch.toString())
+        Log.d(LOG_TAG, "fetch: $fetch")
+
+        var number = memory.getTableCount(Profile::class.java.simpleName)
+        Log.d(LOG_TAG, "number : $number")
+        
+        memory.deleteById(Profile::class.java.simpleName, profile.id)
+
+        number = memory.getTableCount(Profile::class.java.simpleName)
+        Log.d(LOG_TAG, "number : $number")
     }
 
 }
