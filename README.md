@@ -7,7 +7,7 @@ With Memory you will be able to use your classic POJO Java classes but also the
 # Gradle
 
 ```
-compile 'no.hyper.memoryorm:memoryorm:0.4.5'
+compile 'no.hyper.memoryorm:memoryorm:0.5.2'
 ```
 
 # Usage
@@ -21,40 +21,6 @@ The library relies on a json description of your database to build it. You need 
 ``` json
 {
   "tables": [{
-    "name": "Gear",
-    "columns": [{
-      "label": "id",
-      "type": "text",
-      "primary": true
-    }, {
-      "label": "name",
-      "type": "text"
-    }, {
-      "label": "magical",
-      "type": "integer"
-    }, {
-      "label": "id_Profile",
-      "type": "integer",
-      "foreign_key": true
-    }]
-  }, {
-    "name": "House",
-    "columns": [{
-      "label": "id",
-      "type": "text",
-      "primary": true
-    }, {
-      "label": "name",
-      "type": "text"
-    }, {
-      "label": "place",
-      "type": "text"
-    }, {
-      "label": "id_Profile",
-      "type": "integer",
-      "foreign_key": true
-    }]
-  }, {
     "name": "Profile",
     "columns": [{
       "label": "id",
@@ -74,10 +40,41 @@ The library relies on a json description of your database to build it. You need 
       "type": "Gear",
       "custom": true,
       "list": true
+    }]
+  }, {
+    "name": "Gear",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
     }, {
-      "label": "house",
-      "type": "House",
-      "custom": true
+      "label": "type",
+      "type": "text",
+      "enum": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "id_Profile",
+      "type": "integer",
+      "foreign_key": true
+    }]
+  }, {
+    "name": "Animal",
+    "columns": [{
+      "label": "id",
+      "type": "text",
+      "primary": true
+    }, {
+      "label": "name",
+      "type": "text"
+    }, {
+      "label": "magic",
+      "type": "integer"
+    }, {
+      "label": "id_Profile",
+      "type": "integer",
+      "foreign_key": true
     }]
   }]
 }
@@ -86,27 +83,48 @@ The library relies on a json description of your database to build it. You need 
 The file HAS TO be placed like this `asset/schema/database.json`. Of course, you also need to have the corresponding POJO or `data class` object that go with each table described in your json. The "type" parameter accept two options : "text" or "integer" based on the type supported by SQLite. So if you have a boolean parameter, the library will use 0 or 1 in the database and convert to false or true accordingly. 
 
 ``` kotlin
-data class Gear (
-    var name : String,
-    var magical : Boolean,
-    val id : String? = null)
+data class Animal(val id: String, val name: String, val magic: Boolean)
 
-data class House (
-    var name : String,
-    var place : String,
-    val id : String? = null)
+data class Gear(val id: String, val type: Type, val name: String) {
+
+    companion object {
+        val SOME_COMPANION_GEAR_VAL = 1
+    }
+
+    enum class Type {
+        SWORD{
+            override fun isGolden() = false
+        },
+
+        ARMOR{
+            override fun isGolden() = true
+        };
+
+        abstract fun isGolden() : Boolean
+    }
+
+}
 
 data class Profile (
+        var id : String?,
         var name : String,
         var age : Int,
         var human : Boolean,
-        var gear : List<Gear>? = null,
-        var house : House? = null,
-        var id : String? = null)
+        var gear : MutableList<Gear>,
+        var animal : Animal
+) {
+
+    companion object {
+        val SOME_COMPANION_PROFILE_VAL = 1
+    }
+
+}
 ```
 Note 1 : If your tables have relations, you need to specify the foreigns key in the correct table and follow this convention for its name `id_NameOfTheTable`.
 
 Note 2 : An `id` field is not mandatory, Memory uses the `ROWID` field of each row to maintain the relations through the database.
+
+Note 3 : The `Serialisable` interface is supported, you class/data class can implement it.
 
 ## Creating and deleting tables
 
@@ -114,7 +132,8 @@ The first thing you need to do is instantiating the only object you need to use 
 
 ``` kotlin
 val memory = Memory(context)
-memory.createTables()
+memory.deleteDatabase() // not necessary
+memory.createDatabase()
 ```
 
 ## Save in database
@@ -122,14 +141,15 @@ memory.createTables()
 Memory makes it really easy, it also supports nested oject and list : 
 
 ``` kotlin
-val finnGear = listOf(Gear("sword", true, "sword1"), Gear("shield", false, "shield1"))
-val finnHouse = House("tree-house", "unknown", "finnTreeHouse")
-val finn = Profile("finn", 13, true, finnGear, finnHouse, "profile0")
-
-memory.save(finn)
+val sword = Gear(UUID.randomUUID().toString(), Gear.Type.SWORD, "grass sword")
+val armor = Gear(UUID.randomUUID().toString(), Gear.Type.ARMOR, "armor of zeldron")
+val gears = mutableListOf(sword, armor)
+val animal = Animal(UUID.randomUUID().toString(), "jake", true)
+val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, gears, animal)
+memory.save(profile)
 ```
 
-The function `save` returns you the rowId value of the row created by the insertion.
+The function `save` returns you the rowId value of the row created by the insertion. You can also pass a list parameter, the function will return you the list of corresponding row id.
 
 ## Fetch rows from a table
 
@@ -137,12 +157,12 @@ It's as simple as saving:
 
 ``` kotlin
 val profiles = memory.fetchAll(Profile::class.java)
-for (profile in profiles) {
+profiles.forEach() {
     //do some stuff...
 }
 ```
 
-Two other methods are available : `fetchFirst`and `fetchById`
+Three other methods are available : `fetchFirst`, `fetchById` and `fetchByRowId`
 
 ## Update a row
 
@@ -154,7 +174,3 @@ memory.update(name)
 ```
 
 Finally, in the case you don't know if an item does not exists in your DB, you can use the `saveOrUpdate` method that check if an item with the same id exists. (Your table need to declare explicitely an id field for this to work)
-
-## Under development
-
-The code base is constantly under improvement, and new features are still to come. For now, writing and fetching in a different thread is under development. You can look into the methods `saveInBackground()` and `fetch...InBackground()`

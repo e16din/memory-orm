@@ -8,5 +8,12 @@ data class Profile (
         var name : String,
         var age : Int,
         var human : Boolean,
-        var gear : MutableList<Gear>
-)
+        var gear : MutableList<Gear>,
+        var animal : Animal
+) {
+
+    companion object {
+        val SOME_COMPANION_PROFILE_VAL = 1
+    }
+
+}

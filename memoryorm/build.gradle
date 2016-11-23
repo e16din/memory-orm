@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 25
     buildToolsVersion "23.0.3"
 
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 30
-        versionName "0.5.1"
+        versionCode 31
+        versionName "0.5.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -44,7 +44,7 @@ ext {
     artifact = 'memoryorm'
 
     libraryDescription = 'This library is an ORM for android developed in Java with kotlin usage in mind'
-    libraryVersion = '0.5.1'
+    libraryVersion = '0.5.2'
 
     developerId = 'jeantuffier'
     developerName = 'Jean Tuffier'
