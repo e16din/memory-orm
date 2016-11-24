@@ -1,4 +1,4 @@
-# MemoryORM
+# memory-orm
 
 This library is an ORM for Android developed in Java with Kotlin usage in mind.
 With Memory you will be able to use your classic POJO Java classes but also the
