@@ -7,7 +7,7 @@ With Memory you will be able to use your classic POJO Java classes but also the
 # Gradle
 
 ```
-compile 'no.hyper.memoryorm:memoryorm:0.5.2'
+compile 'no.hyper.memoryorm:memoryorm:0.5.3'
 ```
 
 # Usage
