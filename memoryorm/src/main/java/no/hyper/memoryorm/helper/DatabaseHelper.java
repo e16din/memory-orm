@@ -27,9 +27,9 @@ public class DatabaseHelper {
      */
     public void createTables() throws IOException {
         Database database = SchemaHelper.getInstance().getDatabase(context);
-        for (Table table : database.getTables()) {
+        /*for (Table table : database.getTables()) {
             createTable(table);
-        }
+        }*/
     }
 
     /**

@@ -1,6 +1,7 @@
 package no.hyper.memoryorm.helper;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -33,7 +34,12 @@ public class SchemaHelper {
             InputStream stream = context.getAssets().open(PATH);
             String schema = getJsonSchema(stream);
             Gson gson = new Gson();
-            db = gson.fromJson(schema, Database.class);
+            try {
+                db = gson.fromJson(schema, Database.class);
+                Log.e("SchemaHelper", "tables: " + db.getTables().size());
+            } catch (Exception e) {
+                Log.e("SchemaHelper", "fail parse json: " + e.getMessage());
+            }
         }
         return db;
     }
