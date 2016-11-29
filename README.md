@@ -7,7 +7,7 @@ With Memory you will be able to use your classic POJO Java classes but also the
 # Gradle
 
 ```
-compile 'no.hyper.memoryorm:memoryorm:0.5.3'
+compile 'no.hyper.memoryorm:memoryorm:0.6.0'
 ```
 
 # Usage
@@ -174,3 +174,11 @@ memory.update(name)
 ```
 
 Finally, in the case you don't know if an item does not exists in your DB, you can use the `saveOrUpdate` method that check if an item with the same id exists. (Your table need to declare explicitely an id field for this to work)
+
+# Proguard
+The library needs to be able to read your model class names in order to save and fetch values in your database. I advice you to add this to your proguard file : 
+
+```
+# Application classes that will be serialized/deserialized over Gson
+-keep class no.hyper.memoryormdemo.model.** { *; }
+```
