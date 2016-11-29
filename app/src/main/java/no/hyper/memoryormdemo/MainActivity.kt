@@ -9,7 +9,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    val LOG_TAG = this.javaClass.simpleName
+    val LOG_TAG = this.javaClass.simpleName + "LOG"
 
     private val memory by lazy { Memory(this) }
 
@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         memory.deleteDatabase()
         memory.createDatabase()
 
-        /*val sword = Gear(UUID.randomUUID().toString(), Gear.Type.SWORD, "grass sword")
+        val sword = Gear(UUID.randomUUID().toString(), Gear.Type.SWORD, "grass sword")
         val armor = Gear(UUID.randomUUID().toString(), Gear.Type.ARMOR, "armor of zeldron")
         val gears = mutableListOf(sword, armor)
         val animal = Animal(UUID.randomUUID().toString(), "jake", true)
@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         memory.deleteById(Profile::class.java.simpleName, profile.id)
 
         number = memory.getTableCount(Profile::class.java.simpleName)
-        Log.d(LOG_TAG, "number : $number")*/
+        Log.d(LOG_TAG, "number : $number")
     }
 
 }

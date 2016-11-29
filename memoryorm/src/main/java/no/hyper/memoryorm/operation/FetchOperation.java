@@ -2,6 +2,7 @@ package no.hyper.memoryorm.operation;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -55,7 +56,10 @@ public class FetchOperation {
     public static <T> T fetchFirst(DbManager db, Context context, Class<T> classType, String condition)
             throws IOException, NoSuchFieldException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Cursor cursor = db.rawQuery(getFetchAllRequest(classType.getSimpleName(), condition), null);
-        if (cursor == null || cursor.getCount() <= 0) return null;
+        if (cursor == null || cursor.getCount() <= 0) {
+            Log.e("FETCH", "cursor is null");
+            return null;
+        }
         cursor.moveToFirst();
         T entity = ObjectHelper.getEntity(db, context, classType, cursor);
         cursor.close();

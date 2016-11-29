@@ -34,12 +34,7 @@ public class SchemaHelper {
             InputStream stream = context.getAssets().open(PATH);
             String schema = getJsonSchema(stream);
             Gson gson = new Gson();
-            try {
-                db = gson.fromJson(schema, Database.class);
-                Log.e("SchemaHelper", "tables: " + db.getTables().size());
-            } catch (Exception e) {
-                Log.e("SchemaHelper", "fail parse json: " + e.getMessage());
-            }
+            db = gson.fromJson(schema, Database.class);
         }
         return db;
     }

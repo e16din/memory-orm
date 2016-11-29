@@ -1,11 +1,15 @@
 package no.hyper.memoryorm.model;
 
 
+import android.support.annotation.Keep;
+
 import com.google.gson.annotations.SerializedName;
 
 /**
  * Created by jean on 16.06.2016.
  */
+
+@Keep
 public class Column {
 
     private String label;

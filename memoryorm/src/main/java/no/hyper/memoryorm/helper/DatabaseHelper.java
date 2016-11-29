@@ -1,6 +1,7 @@
 package no.hyper.memoryorm.helper;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -27,9 +28,9 @@ public class DatabaseHelper {
      */
     public void createTables() throws IOException {
         Database database = SchemaHelper.getInstance().getDatabase(context);
-        /*for (Table table : database.getTables()) {
+        for (Table table : database.getTables()) {
             createTable(table);
-        }*/
+        }
     }
 
     /**
