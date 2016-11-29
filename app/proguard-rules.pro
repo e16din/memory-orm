@@ -15,3 +15,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Application classes that will be serialized/deserialized over Gson
+-keep class no.hyper.memoryormdemo.model.** { *; }
+

@@ -9,7 +9,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    val LOG_TAG = this.javaClass.simpleName
+    val LOG_TAG = "MainActivity_LOG"
 
     private val memory by lazy { Memory(this) }
 
