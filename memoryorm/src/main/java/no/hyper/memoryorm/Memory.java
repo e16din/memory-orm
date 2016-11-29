@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import no.hyper.memoryorm.helper.DatabaseHelper;
-import no.hyper.memoryorm.helper.SchemaHelper;
 import no.hyper.memoryorm.operation.FetchOperation;
 import no.hyper.memoryorm.operation.InsertOperation;
 import no.hyper.memoryorm.operation.UpdateOperation;
@@ -18,7 +17,6 @@ import no.hyper.memoryorm.operation.UpdateOperation;
  */
 public class Memory {
 
-    private static final String LOG_TAG = Memory.class.getSimpleName();
     private DbManager db;
     private DatabaseHelper databaseHelper;
     private Context context;

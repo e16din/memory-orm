@@ -5,21 +5,17 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 /**
  * Created by Jean on 5/12/2016.
  */
 public class DbManager extends SQLiteOpenHelper {
 
-    private final static String LOG_TAG = DbManager.class.getSimpleName();
     private SQLiteDatabase db;
     private static DbManager instance;
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
-        Log.d(LOG_TAG, "$LOG_TAG onCreate");
-    }
+    public void onCreate(SQLiteDatabase db) { }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
