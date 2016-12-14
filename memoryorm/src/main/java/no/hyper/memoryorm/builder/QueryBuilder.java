@@ -51,7 +51,7 @@ public class QueryBuilder {
 
     public QueryBuilder whereId(Long id) {
         if (id != null) {
-            this.where = "WHERE id=" + id;
+            this.where = "WHERE id='" + id + "'";
         }
         return this;
     }
