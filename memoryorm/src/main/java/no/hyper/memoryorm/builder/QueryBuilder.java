@@ -49,7 +49,7 @@ public class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder whereId(Long id) {
+    public QueryBuilder whereId(String id) {
         if (id != null) {
             this.where = "WHERE id='" + id + "'";
         }
