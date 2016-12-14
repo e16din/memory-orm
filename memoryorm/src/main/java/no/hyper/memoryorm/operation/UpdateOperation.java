@@ -84,7 +84,7 @@ public class UpdateOperation {
         return new QueryBuilder()
                 .select()
                 .from(table)
-                .where("id=" + id)
+                .whereId(Long.decode(id))
                 .toSqlRequest();
     }
 
