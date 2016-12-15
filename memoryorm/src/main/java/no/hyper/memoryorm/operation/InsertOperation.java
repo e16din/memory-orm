@@ -63,7 +63,7 @@ public class InsertOperation {
      */
     public static <T> List<Long> insert(DbManager db, Context context, List<T> list, HashMap<String, Long> foreignKeys)
             throws IOException, NoSuchFieldException, IllegalAccessException {
-        if (list.size() <= 0) return null;
+        if (list != null && list.size() <= 0) return null;
 
         List<Long> rows = new ArrayList<>();
         for(T entity : list) {

@@ -4,12 +4,12 @@ package no.hyper.memoryormdemo.model
  * Created by Jean on 5/12/2016.
  */
 data class Profile (
-        var id : String?,
-        var name : String,
-        var age : Int,
-        var human : Boolean,
-        var gear : MutableList<Gear>,
-        var animal : Animal
+        var id : String? = null,
+        var name : String? = null,
+        var age : Int? = null,
+        var human : Boolean? = null,
+        var gear : MutableList<Gear>? = null,
+        var animal : Animal? = null
 ) {
 
     companion object {

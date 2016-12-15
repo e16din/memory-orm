@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         val armor = Gear(UUID.randomUUID().toString(), Gear.Type.ARMOR, "armor of zeldron")
         val gears = mutableListOf(sword, armor)
         val animal = Animal(UUID.randomUUID().toString(), "jake", true)
-        val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, gears, animal)
+        val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, null, null)
         memory.save(profile)
 
         val fetch = memory.fetchFirst(Profile::class.java)
