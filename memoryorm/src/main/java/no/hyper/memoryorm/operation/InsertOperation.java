@@ -85,6 +85,8 @@ public class InsertOperation {
         Field field = entity.getClass().getDeclaredField(columnLabel);
         field.setAccessible(true);
         Object actualObject = field.get(entity);
+        if (actualObject == null) return;
+
         HashMap<String, Long> foreignKey = new HashMap<>();
         foreignKey.put("id_" + entity.getClass().getSimpleName(), rowId);
         insert(db, context, (List<U>)actualObject, foreignKey);
