@@ -42,7 +42,9 @@ public class InsertOperation {
 
         for(Column column : nestedObjects) {
             Long id = insertNestedObject(db, entity, column, context);
-            entityValues.put(column.getLabel(), id);
+            if (id != -1l) {
+                entityValues.put(column.getLabel(), id);
+            }
         }
 
         Long rowId = db.insert(entity.getClass().getSimpleName(), entityValues);
@@ -77,6 +79,8 @@ public class InsertOperation {
         Field field = entity.getClass().getDeclaredField(column.getLabel());
         field.setAccessible(true);
         Object actualObject = field.get(entity);
+        if (actualObject == null) return -1l;
+
         return insert(db, context, actualObject, null);
     }
 
