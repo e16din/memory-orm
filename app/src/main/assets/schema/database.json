@@ -16,8 +16,7 @@
       "type": "integer"
     }, {
       "label": "gear",
-      "type": "Gear",
-      "custom": true,
+      "type": "text",
       "list": true
     }]
   }, {

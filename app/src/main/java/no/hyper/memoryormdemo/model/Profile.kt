@@ -8,7 +8,7 @@ data class Profile (
         var name : String,
         var age : Int,
         var human : Boolean,
-        var gear : MutableList<Gear>,
+        var gear : MutableList<String>,
         var animal : Animal
 ) {
 

@@ -92,8 +92,10 @@ public class ObjectHelper {
                     for (U item : list) {
                         builder.append(item + ";");
                     }
-                    builder.deleteCharAt(builder.length() - 1);
-                    values.put(column.getLabel(), builder.toString());
+                    if (builder.length() > 0) {
+                        builder.deleteCharAt(builder.length() - 1);
+                        values.put(column.getLabel(), builder.toString());
+                    }
                 } else {
                     values.put(column.getLabel(), convertJavaValueToSQLite(value).toString());
                 }

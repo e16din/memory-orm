@@ -20,11 +20,8 @@ class MainActivity : AppCompatActivity() {
         memory.deleteDatabase()
         memory.createDatabase()
 
-        val sword = Gear(UUID.randomUUID().toString(), Gear.Type.SWORD, "grass sword")
-        val armor = Gear(UUID.randomUUID().toString(), Gear.Type.ARMOR, "armor of zeldron")
-        val gears = mutableListOf(sword, armor)
         val animal = Animal(UUID.randomUUID().toString(), "jake", true)
-        val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, gears, animal)
+        val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, mutableListOf<String>(), animal)
         memory.save(profile)
 
         val fetch = memory.fetchFirst(Profile::class.java)
