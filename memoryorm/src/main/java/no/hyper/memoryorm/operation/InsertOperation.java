@@ -42,7 +42,9 @@ public class InsertOperation {
 
         for(Column column : nestedObjects) {
             Long id = insertNestedObject(db, entity, column, context);
-            entityValues.put(column.getLabel(), id);
+            if (id != -1l) {
+                entityValues.put(column.getLabel(), id);
+            }
         }
 
         Long rowId = db.insert(entity.getClass().getSimpleName(), entityValues);
@@ -63,7 +65,7 @@ public class InsertOperation {
      */
     public static <T> List<Long> insert(DbManager db, Context context, List<T> list, HashMap<String, Long> foreignKeys)
             throws IOException, NoSuchFieldException, IllegalAccessException {
-        if (list.size() <= 0) return null;
+        if (list != null && list.size() <= 0) return null;
 
         List<Long> rows = new ArrayList<>();
         for(T entity : list) {
@@ -77,6 +79,8 @@ public class InsertOperation {
         Field field = entity.getClass().getDeclaredField(column.getLabel());
         field.setAccessible(true);
         Object actualObject = field.get(entity);
+        if (actualObject == null) return -1l;
+
         return insert(db, context, actualObject, null);
     }
 
@@ -85,6 +89,8 @@ public class InsertOperation {
         Field field = entity.getClass().getDeclaredField(columnLabel);
         field.setAccessible(true);
         Object actualObject = field.get(entity);
+        if (actualObject == null) return;
+
         HashMap<String, Long> foreignKey = new HashMap<>();
         foreignKey.put("id_" + entity.getClass().getSimpleName(), rowId);
         insert(db, context, (List<U>)actualObject, foreignKey);

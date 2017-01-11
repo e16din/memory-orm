@@ -21,8 +21,8 @@ class MainActivity : AppCompatActivity() {
         memory.createDatabase()
 
         val animal = Animal(UUID.randomUUID().toString(), "jake", true)
-        val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, mutableListOf<String>(), animal)
-        memory.save(profile)
+        val profile = Profile(UUID.randomUUID().toString(), "finn", 13, true, null, null)
+        memory.saveOrUpdate(profile)
 
         val fetch = memory.fetchFirst(Profile::class.java)
         Log.d(LOG_TAG, "fetch: $fetch")
