@@ -181,4 +181,5 @@ The library needs to be able to read your model class names in order to save and
 ```
 # Application classes that will be serialized/deserialized over Gson
 -keep class no.hyper.memoryormdemo.model.** { *; }
+-keep class <path.to.your.model.package>.** { *; }
 ```
